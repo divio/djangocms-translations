@@ -1,0 +1,17 @@
+{% extends "djangocms_translations/base.html" %}
+{% load i18n cms_tags %}
+
+{% block content %}
+	<h1>Status</h1>
+	<table border="1">
+		<tr>
+			<th>{% trans 'Status' %}</th>
+			<td>{{ object.status }}</td>
+		</tr>
+	</table>
+	<form action="{% url 'admin:translation-request-check-status' object.pk %}" method="post">
+		{% csrf_token %}
+		<button type="submit" value="">Check status</button>
+
+	</form>
+{% endblock content %}

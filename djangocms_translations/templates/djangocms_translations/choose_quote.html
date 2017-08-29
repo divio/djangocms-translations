@@ -1,0 +1,13 @@
+{% extends "djangocms_translations/base.html" %}
+{% load i18n cms_tags %}
+
+{% block content %}
+	<h1>Choose quote</h1>
+	<form action="" method="post" class="frm">
+	    {% csrf_token %}
+	    <fieldset class="frm-horizontal">
+	        {{ form.as_p }}
+	    </fieldset>
+        <input type="submit" value="Submit" />
+	</form>
+{% endblock content %}

@@ -1,0 +1,16 @@
+{
+	"name": "django CMS Translation",
+	"description": "Interface for translations in django CMS",
+	"url": "https://github.com/divio/djangocms-translation",
+	"package-name": "djangocms-translation",
+	"installed-apps": [
+		"djangocms_translations"
+	],
+	"author": {
+		"name": "Divio AG",
+		"url": "https://www.divio.ch"
+	},
+	"license": {
+		"name": "BSD"
+	}
+}

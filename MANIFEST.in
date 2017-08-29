@@ -1,0 +1,6 @@
+include LICENSE
+include README.rst
+recursive-include */boilerplates *
+recursive-include */templates *
+recursive-include */static *
+recursive-include */locale *
