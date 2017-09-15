@@ -1,8 +1,8 @@
 {
 	"name": "django CMS Translation",
 	"description": "Interface for translations in django CMS",
-	"url": "https://github.com/divio/djangocms-translation",
-	"package-name": "djangocms-translation",
+	"url": "https://github.com/divio/djangocms-translations",
+	"package-name": "djangocms-translations",
 	"installed-apps": [
 		"djangocms_translations"
 	],
