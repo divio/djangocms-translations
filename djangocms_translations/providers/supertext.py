@@ -9,7 +9,6 @@ from djangocms_transfer.forms import _object_version_data_hook
 
 from .. import __version__ as djangocms_translations_version
 from ..utils import add_domain
-from .. import models
 
 from .base import BaseTranslationProvider, ProviderException
 
@@ -120,6 +119,8 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         return response.json()
 
     def send_request(self):
+        from djangocms_translations.models import TranslationOrder
+
         request = self.request
 
         data = self.request.request_content
@@ -134,7 +135,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         data.update(request.selected_quote.provider_options)
 
-        order = models.TranslationOrder.objects.create(
+        order = TranslationOrder.objects.create(
             request=request,
             request_content=data,
         )
