@@ -8,3 +8,4 @@ class Form(forms.BaseForm):
         if 'ALDRYN_SSO_LOGIN_WHITE_LIST' in settings:
             endpoint = '/admin/djangocms_translations/translationrequest/\w+/callback/'
             settings['ALDRYN_SSO_LOGIN_WHITE_LIST'].append(endpoint)
+        return settings
