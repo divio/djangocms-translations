@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -81,10 +82,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         # convert it to a format which is easier to work with
         export_content = {
-            placeholder['placeholder']: {
-                plugin['pk']: plugin
+            placeholder['placeholder']: OrderedDict(
+                (plugin['pk'], plugin)
                 for plugin in placeholder['plugins']
-            }
+            )
             for placeholder in export_content
         }
 
