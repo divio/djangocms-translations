@@ -9,7 +9,7 @@ import requests
 from djangocms_transfer.forms import _object_version_data_hook
 
 from .. import __version__ as djangocms_translations_version
-from ..utils import add_domain
+from ..utils import add_domain, get_translatable_fields
 
 from .base import BaseTranslationProvider, ProviderException
 
@@ -47,18 +47,24 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             'SourceLang': self.request.source_language,
             'TargetLanguages': [self.request.target_language],
         }
-
         groups = []
+        fields_by_plugin = {}
 
         for placeholder in json.loads(self.request.export_content):
             for plugin in placeholder['plugins']:
+                plugin_type = plugin['plugin_type']
+
+                if plugin_type not in fields_by_plugin:
+                    fields_by_plugin[plugin_type] = get_translatable_fields(plugin_type)
+
+                plugin_data = plugin['data']
                 items = [
                     {
-                        'Context': key,
-                        'Content': value,
+                        'Id': field,
+                        'Content': plugin_data[field],
                     }
-                    for key, value in plugin['data'].items()
-                    if value
+                    for field in fields_by_plugin[plugin_type]
+                    if plugin_data.get(field)
                 ]
 
                 if items:
@@ -94,7 +100,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             plugin_id = int(plugin_id)
 
             for item in group['Items']:
-                export_content[placeholder][plugin_id]['data'][item['Context']] = item['Content']
+                export_content[placeholder][plugin_id]['data'][item['Id']] = item['Content']
 
         # convert back into djangocms-transfer format
         data = json.dumps([{
