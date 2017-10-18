@@ -19,8 +19,8 @@ class SupertextException(ProviderException):
 
 
 class SupertextTranslationProvider(BaseTranslationProvider):
-    # BASE_API_URL = 'https://www.supertext.ch/api/v1/'
-    BASE_API_URL = 'https://dev.supertext.ch/api/'
+    API_LIVE_URL = 'https://www.supertext.ch/api/v1/'
+    API_STAGE_URL = 'https://dev.supertext.ch/api/'
 
     def get_headers(self):
         return {
