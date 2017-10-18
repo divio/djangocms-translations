@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.utils.translation import get_language_from_request, ugettext_lazy as _
+from django.utils.translation import (
+    get_language_info,
+    get_language_from_request,
+    ugettext_lazy as _,
+)
 
 from cms.toolbar_pool import toolbar_pool
 from cms.toolbar_base import CMSToolbar
@@ -47,12 +51,10 @@ class TranslationsToolbar(CMSToolbar):
             current_language,
         )
 
-        for code, name in settings.LANGUAGES:
+        for code in page.get_languages():
             if code != current_language:
+                name = get_language_info(code)['name']
                 translate_menu.add_modal_item(
                     _('to {}'.format(name)),
                     url='{}&target_lang={}'.format(url, code),
                 )
-
-    def post_template_populate(self):
-        pass
