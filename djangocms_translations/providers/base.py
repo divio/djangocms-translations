@@ -1,6 +1,6 @@
 import requests
 
-from . import conf
+from .. import conf
 
 
 class ProviderException(Exception):
