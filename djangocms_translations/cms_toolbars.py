@@ -12,6 +12,7 @@ from cms.toolbar_base import CMSToolbar
 
 @toolbar_pool.register
 class TranslationsToolbar(CMSToolbar):
+
     def populate(self):
         available_languages = settings.LANGUAGES
         if len(available_languages) > 1:
@@ -23,7 +24,13 @@ class TranslationsToolbar(CMSToolbar):
             return
 
         page = self.request.current_page
+
         if not page:
+            return
+
+        page_languages = page.get_languages()
+
+        if len(page_languages) < 2:
             return
 
         menu = self.toolbar.get_or_create_menu(
