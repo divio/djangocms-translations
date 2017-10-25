@@ -73,9 +73,7 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.base_fields['selected_quote'].queryset = (
-            self.base_fields['selected_quote'].queryset
-            .filter(request=kwargs['instance'])
-        )
         super(ChooseTranslationQuoteForm, self).__init__(*args, **kwargs)
-        self.fields['selected_quote'].choices = list(self.fields['selected_quote'].choices)[1:]
+        self.fields['selected_quote'].required = True
+        self.fields['selected_quote'].queryset = self.instance.quotes.all()
+        self.fields['selected_quote'].empty_label = None
