@@ -29,7 +29,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         }
 
     def get_auth(self):
-        return settings.DJANGOCMS_TRANSLATIONS_SUPERTEXT_AUTH
+        return (
+            settings.DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER,
+            settings.DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD,
+        )
 
     def make_request(self, method, section, **kwargs):
         return requests.request(
