@@ -46,7 +46,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
     def convert_for_export(self):
         data = {
             'ContentType': 'text/html',
-            'Currency': 'chf',  # TODO
             'SourceLang': self.request.source_language,
             'TargetLanguages': [self.request.target_language],
         }
