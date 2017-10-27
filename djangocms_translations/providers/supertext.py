@@ -19,7 +19,7 @@ class SupertextException(ProviderException):
 
 
 class SupertextTranslationProvider(BaseTranslationProvider):
-    API_LIVE_URL = 'https://www.supertext.ch/api/v1/'
+    API_LIVE_URL = 'https://www.supertext.ch/api/'
     API_STAGE_URL = 'https://dev.supertext.ch/api/'
 
     def get_headers(self):
