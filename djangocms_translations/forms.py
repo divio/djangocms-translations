@@ -1,14 +1,22 @@
 from django import forms
 from django.forms import Select
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+
+from cms.models import Page
 
 from .utils import get_languages_for_current_site
 from . import models
 
 
 class CreateTranslationForm(forms.ModelForm):
+    cms_page = forms.ModelChoiceField(
+        queryset=Page.objects.drafts(),
+        widget=forms.widgets.HiddenInput(),
+    )
+
     class Meta:
         model = models.TranslationRequest
         fields = [
@@ -28,6 +36,16 @@ class CreateTranslationForm(forms.ModelForm):
         self.fields['provider_backend'].choices = self.fields['provider_backend'].choices[1:]
         for field in ('source_language', 'target_language'):
             self.fields[field] = forms.ChoiceField(choices=self.build_language_choices())
+
+    @cached_property
+    def selected_page(self):
+        if self.is_valid():
+            data = self.cleaned_data
+        else:
+            data = self.data or self.initial
+
+        if data.get('cms_page'):
+            return Page.objects.drafts().get(pk=data['cms_page'])
 
     def build_language_choices(self):
         return [
