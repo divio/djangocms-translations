@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
@@ -17,18 +18,25 @@ from djangocms_transfer.utils import get_local_fields, get_plugin_model
 from .conf import TRANSLATIONS_CONF
 
 
+USE_HTTPS = getattr(settings, 'URLS_USE_HTTPS', False)
+
+
 def get_languages_for_current_site():
     return get_language_objects(Site.objects.get_current().pk)
 
 
 def add_domain(url, domain=None):
     # add the domain to this url.
-    if not domain:
+    if domain is None:
         domain = Site.objects.get_current().domain
+
     url = URL(url)
-    url = url.replace(scheme='http')  # TODO: https?
-    url = url.replace(host=domain)
-    return str(url)
+
+    if USE_HTTPS:
+        url = url.replace(scheme='https')
+    else:
+        url = url.replace(scheme='http')
+    return str(url.replace(host=domain))
 
 
 def pretty_data(data, LexerClass):
