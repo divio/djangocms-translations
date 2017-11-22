@@ -1,12 +1,16 @@
+from __future__ import unicode_literals
+
 import json
 
-from cms.models.fields import PageField
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.db import IntegrityError
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+
+from cms.models.fields import PageField
 
 from extended_choices import Choices
 from djangocms_transfer.exporter import get_page_export_data
@@ -23,7 +27,8 @@ class TranslationRequest(models.Model):
         ('PENDING_APPROVAL', 'pending_approval', _('Pending approval of quote')),
         ('READY_FOR_SUBMISSION', 'ready_for_submission', _('Pending submission to translation provider')),
         ('IN_TRANSLATION', 'in_translation', _('In translation')),
-        ('READY_FOR_IMPORT', 'ready_for_import', _('Ready for import')),
+        ('IMPORT_STARTED', 'import_started', _('Import Started')),
+        ('IMPORT_FAILED', 'import_failed', _('Import Failed')),
         ('IMPORTED', 'imported', _('Imported')),
         ('CANCELLED', 'cancelled', _('Cancelled')),
     )
@@ -61,11 +66,14 @@ class TranslationRequest(models.Model):
         return self._provider
     _provider = None
 
-    def set_status(self, status):
+    def set_status(self, status, commit=True):
         if status not in self.STATES.values:
             raise RuntimeError('Invalid status')
         self.state = status
-        self.save(update_fields=('state',))
+
+        if commit:
+            self.save(update_fields=('state',))
+        return not status == self.STATES.IMPORT_FAILED
 
     def export_content_from_cms(self):
         if not self.cms_page and not self.source_language:
@@ -126,15 +134,29 @@ class TranslationRequest(models.Model):
         # on success, update the requests status as well
         self.order.save(update_fields=('state',))
 
-    def import_response(self, response):
-        self.set_status(self.STATES.READY_FOR_IMPORT)
-        content = self.provider.convert_for_import(response)
-        import_plugins_to_page(
-            placeholders=content,
-            page=self.cms_page,
-            language=self.target_language
-        )
-        self.set_status(self.STATES.IMPORTED)
+    def import_response(self, raw_data):
+        self.set_status(self.STATES.IMPORT_STARTED)
+        self.order.response_content = raw_data.decode('utf-8')
+        self.order.save(update_fields=('response_content',))
+
+        try:
+            content = self.provider.get_import_data()
+        except ValueError:
+            return self.set_status(self.STATES.IMPORT_FAILED)
+
+        try:
+            import_plugins_to_page(
+                placeholders=content,
+                page=self.cms_page,
+                language=self.target_language
+            )
+        except IntegrityError:
+            return self.set_status(self.STATES.IMPORT_FAILED)
+
+        self.set_status(self.STATES.IMPORTED, commit=False)
+        self.date_imported = timezone.now()
+        self.save(update_fields=('date_imported', 'state'))
+        return True
 
 
 class TranslationQuote(models.Model):

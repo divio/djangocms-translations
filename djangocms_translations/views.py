@@ -42,9 +42,8 @@ class TranslationRequestProviderCallbackView(UpdateView):
         raise Http404
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.import_response(request)
-        return JsonResponse({'success': True})
+        success = self.get_object().import_response(request.body)
+        return JsonResponse({'success': success})
 
 
 class ChooseTranslationQuoteView(UpdateView):
@@ -88,6 +87,10 @@ class ImportProviderResponse(UpdateView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object.import_response()
-        messages.success(request, 'Imported content.')
-        return redirect(self.get_success_url())
+        success = self.object.import_response(self.object.order.response_content)
+
+        if success:
+            messages.success(request, 'Imported content.')
+            return redirect(self.get_success_url())
+        messages.error(request, 'Failed to import content.')
+        return redirect('admin:translation-request-import-response', args=(self.object.pk,))

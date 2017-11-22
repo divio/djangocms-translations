@@ -34,10 +34,10 @@ class BaseTranslationProvider(object):
             **kwargs
         )
 
-    def convert_for_export(self):
+    def get_export_data(self):
         raise NotImplementedError
 
-    def convert_for_import(self, provider_response):
+    def get_import_data(self):
         raise NotImplementedError
 
     def get_quote(self):

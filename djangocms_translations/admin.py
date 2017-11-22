@@ -66,6 +66,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         TranslationOrderInline,
     ]
 
+    list_filter = ('state',)
     list_display = (
         'date_created',
         'pretty_cms_page',

@@ -29,8 +29,8 @@ class SupertextTranslationProviderTestCase(TestCase, BaseCMSTestCase):
         provider = request.provider
 
         before = request.request_content
-        export_data = provider.convert_for_export()
+        export_data = provider.get_export_data()
         request.response_content = export_data
-        after = provider.convert_for_import()
+        after = provider.get_import_data()
 
         self.assertEqual(before, after)

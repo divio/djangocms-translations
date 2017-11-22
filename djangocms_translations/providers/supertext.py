@@ -43,7 +43,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             **kwargs
         )
 
-    def convert_for_export(self):
+    def get_export_data(self):
         data = {
             'ContentType': 'text/html',
             'SourceLang': self.request.source_language,
@@ -78,15 +78,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         data['Groups'] = groups
         return data
 
-    def convert_for_import(self, provider_response):
+    def get_import_data(self):
         request = self.request
-
         export_content = json.loads(request.export_content)
-
-        request.order.response_content = provider_response.body.decode('utf-8')
-        request.order.save(update_fields=('response_content',))
-
-        response_content = json.loads(request.order.response_content)
+        import_content = json.loads(request.order.response_content)
 
         # convert it to a format which is easier to work with
         export_content = {
@@ -97,7 +92,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             for placeholder in export_content
         }
 
-        for group in response_content['Groups']:
+        for group in import_content['Groups']:
             placeholder, plugin_id = group['GroupId'].rsplit(':', 1)
             plugin_id = int(plugin_id)
 
@@ -109,14 +104,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             'placeholder': placeholder,
             'plugins': list(plugins.values()),
         } for placeholder, plugins in export_content.items()])
-
-        return json.loads(
-            data,
-            object_hook=_object_version_data_hook,
-        )
+        return json.loads(data, object_hook=_object_version_data_hook)
 
     def get_quote(self):
-        self.request.request_content = self.convert_for_export()
+        self.request.request_content = self.get_export_data()
         self.request.save(update_fields=('request_content',))
         response = self.make_request(
             method='post',
