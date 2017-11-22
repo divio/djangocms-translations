@@ -159,7 +159,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 reverse('admin:translation-request-check-status', args=(obj.pk,)),
                 _('Check Status'),
             )
-        elif obj.state == models.TranslationRequest.STATES.READY_FOR_IMPORT:
+        elif obj.state == models.TranslationRequest.STATES.IMPORT_FAILED:
             return render_action(
                 reverse('admin:translation-request-import-response', args=(obj.pk,)),
                 _('Import response'),
