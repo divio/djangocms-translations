@@ -1,0 +1,16 @@
+{% load cms_tags cms_js_tags i18n sekizai_tags %}
+<!DOCTYPE html>
+<html class="cms-overflow">
+<head>
+    <meta charset="UTF-8">
+    <title>Some title goes here</title>
+    {% render_block "css" %}
+</head>
+<body>
+    {% cms_toolbar %}
+    {% render_block "js" %}
+    {% language cms_toolbar.toolbar_language %}
+        {{ toolbar.structure_renderer.render }}
+    {% endlanguage %}
+</body>
+</html>

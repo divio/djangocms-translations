@@ -5,11 +5,19 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.db.models import ManyToOneRel
+from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
 
-from djangocms_translations.utils import pretty_json
+from cms.admin.placeholderadmin import PlaceholderAdminMixin
+from cms.models import CMSPlugin
+from cms.operations import ADD_PLUGIN
+from cms.plugin_pool import plugin_pool
+
 from . import models, views
+from .utils import get_plugin_form_class, pretty_json
 
 
 class AllReadOnlyFieldsMixin(object):
@@ -159,11 +167,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 reverse('admin:translation-request-check-status', args=(obj.pk,)),
                 _('Check Status'),
             )
-        elif obj.state == models.TranslationRequest.STATES.IMPORT_FAILED:
-            return render_action(
-                reverse('admin:translation-request-import-response', args=(obj.pk,)),
-                _('Import response'),
-            )
 
     def get_urls(self):
         return [
@@ -184,13 +187,18 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             ),
             url(
                 r'(?P<pk>\w+)/callback/$',
-                views.TranslationRequestProviderCallbackView.as_view(),
+                views.process_provider_callback_view,
                 name='translation-request-provider-callback',
             ),
             url(
-                r'(?P<pk>\w+)/import-response/$',
-                views.ImportProviderResponse.as_view(),
-                name='translation-request-import-response',
+               r'(?P<pk>\w+)/adjust-import-data/$',
+               views.adjust_import_data_view,
+               name='translation-request-adjust-import-data',
+            ),
+            url(
+               r'(?P<pk>\w+)/import-from-archive/$',
+               views.import_from_archive,
+               name='translation-request-import-from-archive',
             ),
 
             # has to be the last one
@@ -200,3 +208,91 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 name='translation-request-detail',
             ),
         ] + super(TranslationRequestAdmin, self).get_urls()
+
+
+@admin.register(models.ArchivedPlaceholder)
+class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def _get_plugin_from_id(self, plugin_id):
+        queryset = (
+            CMSPlugin
+            .objects
+            .select_related('placeholder', 'trans_archived_plugin')
+        )
+        return get_object_or_404(queryset, pk=plugin_id)
+
+    def add_plugin(self, request):
+        if 'plugin' not in request.GET:
+            return super(ArchivedPlaceholderAdmin, self).add_plugin(request)
+
+        plugin = self._get_plugin_from_id(request.GET['plugin'])
+        archived_plugin = plugin.trans_archived_plugin
+        plugin_class = plugin_pool.get_plugin(plugin.plugin_type)
+        plugin_instance = plugin_class(plugin_class.model, self.admin_site)
+        form_data = archived_plugin.data.copy()
+        plugin_form_class = get_plugin_form_class(plugin.plugin_type, fields=form_data.keys())
+        plugin_form = plugin_form_class(form_data)
+        plugin_form.full_clean()
+
+        for field in plugin_form.errors:
+            if field in form_data:
+                # remove invalid initial data.
+                # some fields (Filer) can raise exceptions if the initial data
+                # value points to an object that does not exist.
+                del form_data[field]
+
+        # Setting attributes on the form class is perfectly fine.
+        # The form class is created by modelform factory every time
+        # this get_form() method is called.
+        plugin_instance._cms_initial_attributes = {
+            'id': plugin.pk,
+            'language': plugin.language,
+            'placeholder': plugin.placeholder,
+            'parent': plugin.parent,
+            'plugin_type': plugin.plugin_type,
+            'position': plugin.position,
+        }
+        plugin_instance.get_changeform_initial_data = lambda self: form_data
+
+        response = plugin_instance.add_view(request)
+
+        plugin = getattr(plugin_instance, 'saved_object', None)
+
+        if plugin_instance._operation_token:
+            placeholder = plugin.placeholder
+            tree_order = placeholder.get_plugin_tree_order(plugin.parent_id)
+            self._send_post_placeholder_operation(
+                request,
+                operation=ADD_PLUGIN,
+                token=plugin_instance._operation_token,
+                plugin=plugin,
+                placeholder=plugin.placeholder,
+                tree_order=tree_order,
+            )
+        return response
+
+    def edit_plugin(self, request, plugin_id):
+        try:
+            plugin_id = int(plugin_id)
+        except ValueError:
+            return HttpResponseNotFound(force_text(_("Plugin not found")))
+
+        obj = self._get_plugin_from_id(plugin_id)
+        plugin_class = plugin_pool.get_plugin(obj.plugin_type)
+        plugin_lookup = plugin_class.get_render_queryset().filter(pk=obj.pk)
+
+        if plugin_lookup.exists():
+            return super(ArchivedPlaceholderAdmin, self).edit_plugin(request, plugin_id)
+
+        query = request.GET.copy()
+        query['plugin'] = plugin_id
+        return redirect('{}?{}'.format(obj.get_add_url(), query.urlencode()))

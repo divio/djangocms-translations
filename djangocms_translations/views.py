@@ -1,12 +1,100 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.db import IntegrityError
 from django.http import Http404, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import CreateView, UpdateView, DetailView
+from django.utils.translation import ugettext
+
+from cms.utils.conf import get_cms_setting
 
 from . import forms, models
+from .cms_renderer import UnboundPluginRenderer
+from .models import TranslationRequest
+
+
+@require_GET
+@login_required
+def adjust_import_data_view(request, pk):
+    if not request.toolbar.structure_mode_active:
+        # always force structure mode
+        structure = get_cms_setting('CMS_TOOLBAR_URL__BUILD')
+        return redirect(request.path + '?' + structure)
+
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IMPORT_FAILED)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
+
+    if not trans_request.archived_placeholders.exists():
+        raise Http404
+
+    archived_placeholders = trans_request.archived_placeholders.iterator()
+    # Force the cms to use our custom renderer
+    request.toolbar.__dict__['structure_renderer'] = UnboundPluginRenderer(
+        request,
+        language=trans_request.target_language,
+        placeholders=[ar_pl.placeholder for ar_pl in archived_placeholders],
+    )
+    request.toolbar.__dict__['uses_legacy_structure_mode'] = False
+    context = {
+        'toolbar': request.toolbar,
+        'trans_request': trans_request,
+    }
+    return render(request, 'djangocms_translations/adjust_import_data.html', context)
+
+
+@csrf_exempt
+@require_POST
+def process_provider_callback_view(request, pk):
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IN_TRANSLATION)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
+    success = trans_request.import_response(request.body)
+    return JsonResponse({'success': success})
+
+
+@login_required
+def import_from_archive(request, pk):
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IMPORT_FAILED)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
+
+    if not trans_request.archived_placeholders.exists():
+        raise Http404
+
+    if request.method == 'POST':
+        cms_page = trans_request.cms_page
+
+        try:
+            trans_request._import_from_archive()
+        except IntegrityError:
+            messages.error(request, ugettext('Failed to import plugins.'))
+            redirect_to = reverse('admin:translation-request-adjust-import-data', args=(pk,))
+        else:
+            messages.error(request, ugettext('Plugins imported successfully.'))
+            redirect_to = cms_page.get_absolute_url(trans_request.target_language)
+        return redirect(redirect_to)
+
+    context = {
+        "title": ugettext('Import from archive'),
+        "object": trans_request,
+        "opts": TranslationRequest._meta,
+        "app_label": TranslationRequest._meta.app_label,
+    }
+    return render(request, 'djangocms_translations/import_confirmation.html', context)
 
 
 class CreateTranslationRequestView(CreateView):
@@ -29,21 +117,6 @@ class CreateTranslationRequestView(CreateView):
             'user': self.request.user,
             'cms_page': self.request.GET.get('cms_page_id'),
         }
-
-
-class TranslationRequestProviderCallbackView(UpdateView):
-    model = models.TranslationRequest
-
-    @csrf_exempt
-    def dispatch(self, request, *args, **kwargs):
-        return super(TranslationRequestProviderCallbackView, self).dispatch(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        raise Http404
-
-    def post(self, request, *args, **kwargs):
-        success = self.get_object().import_response(request.body)
-        return JsonResponse({'success': success})
 
 
 class ChooseTranslationQuoteView(UpdateView):
@@ -77,20 +150,3 @@ class CheckRequestStatusView(DetailView):
         self.object.check_status()
         messages.success(request, 'Status updated.')
         return redirect(self.get_success_url())
-
-
-class ImportProviderResponse(UpdateView):
-    model = models.TranslationRequest
-
-    def get_success_url(self):
-        return self.object.cms_page.get_absolute_url(language=self.object.target_language)
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        success = self.object.import_response(self.object.order.response_content)
-
-        if success:
-            messages.success(request, 'Imported content.')
-            return redirect(self.get_success_url())
-        messages.error(request, 'Failed to import content.')
-        return redirect('admin:translation-request-import-response', args=(self.object.pk,))
