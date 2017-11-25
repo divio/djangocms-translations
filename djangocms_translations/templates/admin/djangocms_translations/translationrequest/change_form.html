@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    {% if original.can_import_from_archive %}
+        {% url 'admin:translation-request-import-from-archive' original.pk as import_url %}
+        <li><a href="{{ import_url }}">{% trans "Import from archive" %}</a></li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

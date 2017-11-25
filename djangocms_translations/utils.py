@@ -1,7 +1,9 @@
 import json
+from itertools import chain
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.forms import modelform_factory
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
 
@@ -13,7 +15,7 @@ from pygments import highlight
 from pygments.lexers import JsonLexer
 from pygments.formatters import HtmlFormatter
 
-from djangocms_transfer.utils import get_local_fields, get_plugin_model
+from djangocms_transfer.utils import get_local_fields, get_plugin_class, get_plugin_model
 
 from .conf import TRANSLATIONS_CONF
 
@@ -23,6 +25,25 @@ USE_HTTPS = getattr(settings, 'URLS_USE_HTTPS', False)
 
 def get_languages_for_current_site():
     return get_language_objects(Site.objects.get_current().pk)
+
+
+def get_plugin_form_class(plugin_type, fields):
+    plugin_class = get_plugin_class(plugin_type)
+    plugin_fields = chain(
+        plugin_class.model._meta.concrete_fields,
+        plugin_class.model._meta.private_fields,
+        plugin_class.model._meta.many_to_many,
+    )
+    plugin_fields_disabled = [
+        field.name for field in plugin_fields
+        if not getattr(field, 'editable', False)
+    ]
+    plugin_form_class = modelform_factory(
+        plugin_class.model,
+        fields=fields,
+        exclude=plugin_fields_disabled,
+    )
+    return plugin_form_class
 
 
 def add_domain(url, domain=None):

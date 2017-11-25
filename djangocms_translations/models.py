@@ -4,19 +4,29 @@ import json
 
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db import IntegrityError
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from cms.models.fields import PageField
+from cms.models import CMSPlugin
+from cms.models.fields import PageField, PlaceholderField
+from cms.utils.plugins import copy_plugins_to_placeholder
 
 from extended_choices import Choices
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
+from djangocms_transfer.utils import get_plugin_class
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
+from .utils import get_plugin_form_class
+
+
+def _get_placeholder_slot(archived_placeholder):
+    return archived_placeholder.slot
 
 
 class TranslationRequest(models.Model):
@@ -140,23 +150,79 @@ class TranslationRequest(models.Model):
         self.order.save(update_fields=('response_content',))
 
         try:
-            content = self.provider.get_import_data()
+            placeholders = self.provider.get_import_data()
         except ValueError:
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         try:
             import_plugins_to_page(
-                placeholders=content,
+                placeholders=placeholders,
                 page=self.cms_page,
                 language=self.target_language
             )
         except IntegrityError:
+            self._set_import_archive()
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         self.set_status(self.STATES.IMPORTED, commit=False)
         self.date_imported = timezone.now()
         self.save(update_fields=('date_imported', 'state'))
         return True
+
+    def can_import_from_archive(self):
+        if self.state == self.STATES.IMPORT_FAILED:
+            return self.archived_placeholders.exists()
+        return False
+
+    @transaction.atomic
+    def _import_from_archive(self):
+        plugins_by_placeholder = {
+            pl.slot: pl.get_plugins()
+            for pl in self.archived_placeholders.all()
+        }
+        page_placeholders = (
+            self
+            .cms_page
+            .placeholders
+            .filter(slot__in=plugins_by_placeholder)
+        )
+
+        for placeholder in page_placeholders:
+            plugins = plugins_by_placeholder[placeholder.slot]
+            copy_plugins_to_placeholder(
+                plugins=plugins,
+                placeholder=placeholder,
+                language=self.target_language,
+            )
+
+        self.set_status(self.STATES.IMPORTED, commit=False)
+        self.date_imported = timezone.now()
+        self.save(update_fields=('date_imported', 'state'))
+
+    @transaction.atomic
+    def _set_import_archive(self):
+        page_placeholders = self.cms_page.get_declared_placeholders()
+        plugins_by_placeholder = {
+            pl.slot: pl.plugins
+            for pl in self.provider.get_import_data() if pl.plugins
+        }
+
+        for pos, placeholder in enumerate(page_placeholders, start=1):
+            if placeholder.slot not in plugins_by_placeholder:
+                continue
+
+            plugins = plugins_by_placeholder[placeholder.slot]
+            bound_plugins = (plugin for plugin in plugins if plugin.data)
+            ar_placeholder = (
+                self
+                .archived_placeholders
+                .create(slot=placeholder.slot, position=pos)
+            )
+
+            try:
+                ar_placeholder._import_plugins(bound_plugins)
+            except IntegrityError:
+                return False
 
 
 class TranslationQuote(models.Model):
@@ -194,3 +260,111 @@ class TranslationOrder(models.Model):
     response_content = JSONField(default={}, blank=True)
 
     provider_details = JSONField(default={}, blank=True)
+
+
+class ArchivedPlaceholder(models.Model):
+    slot = models.CharField(max_length=255)
+    request = models.ForeignKey(
+        TranslationRequest,
+        on_delete=models.CASCADE,
+        related_name='archived_placeholders',
+    )
+    placeholder = PlaceholderField(
+        _get_placeholder_slot,
+        related_name='archived_placeholders',
+    )
+    position = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ('position',)
+        default_permissions = ''
+
+    def get_plugins(self):
+        return self.placeholder.get_plugins()
+
+    def _import_plugins(self, plugins):
+        source_map = {}
+        new_plugins = []
+
+        for archived_plugin in plugins:
+            if archived_plugin.parent_id:
+                parent = source_map[archived_plugin.parent_id]
+            else:
+                parent = None
+
+            if parent and parent.__class__ != CMSPlugin:
+                parent = parent.cmsplugin_ptr
+
+            form_data = archived_plugin.data.copy()
+            plugin_form_class = get_plugin_form_class(
+                archived_plugin.plugin_type,
+                fields=form_data.keys(),
+            )
+            plugin_form = plugin_form_class(form_data or None)
+            multi_value_fields = [
+                (name, field) for name, field in plugin_form.fields.items()
+                if hasattr(field.widget, 'decompress') and name in form_data
+            ]
+
+            data_is_valid = plugin_form.is_valid()
+
+            if multi_value_fields and plugin_form.is_bound and not data_is_valid:
+                # The value used on the form data is compressed,
+                # and the form contains multi-value fields which expect a decompressed
+                # value. Try and decompress the value, then see if form is valid.
+                for name, field in multi_value_fields:
+                    compressed = form_data[name]
+
+                    try:
+                        decompressed = field.widget.decompress(compressed)
+                    except ObjectDoesNotExist:
+                        break
+
+                    for pos, value in enumerate(decompressed):
+                        form_data['{}_{}'.format(name, pos)] = value
+                else:
+                    data_is_valid = plugin_form_class(form_data).is_valid()
+
+            plugin = archived_plugin.restore(
+                placeholder=self.placeholder,
+                language=self.request.target_language,
+                parent=parent,
+                with_data=data_is_valid,
+            )
+
+            if data_is_valid:
+                new_plugins.append(plugin)
+            else:
+                self.archived_plugins.create(
+                    data=archived_plugin.data,
+                    cms_plugin=plugin,
+                    old_plugin_id=archived_plugin.pk,
+                )
+            source_map[archived_plugin.pk] = plugin
+
+        for new_plugin in new_plugins:
+            plugin_class = get_plugin_class(new_plugin.plugin_type)
+
+            if getattr(plugin_class, '_has_do_post_copy', False):
+                # getattr is used for django CMS 3.4 compatibility
+                # apps on 3.4 wishing to leverage this callback will need
+                # to manually set the _has_do_post_copy attribute.
+                plugin_class.do_post_copy(new_plugin, source_map)
+
+
+class ArchivedPlugin(models.Model):
+    data = JSONField(default={}, blank=True)
+    placeholder = models.ForeignKey(
+        ArchivedPlaceholder,
+        on_delete=models.CASCADE,
+        related_name='archived_plugins',
+    )
+    cms_plugin = models.OneToOneField(
+        CMSPlugin,
+        on_delete=models.CASCADE,
+        related_name='trans_archived_plugin',
+    )
+    old_plugin_id = models.IntegerField()
+
+    class Meta:
+        default_permissions = ''
