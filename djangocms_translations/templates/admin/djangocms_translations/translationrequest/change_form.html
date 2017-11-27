@@ -3,6 +3,8 @@
 
 {% block object-tools-items %}
     {% if original.can_import_from_archive %}
+        {% url 'admin:translation-request-adjust-import-data' original.pk as adjust_url %}
+        <li><a href="{{ adjust_url }}">{% trans "Adjust import data" %}</a></li>
         {% url 'admin:translation-request-import-from-archive' original.pk as import_url %}
         <li><a href="{{ import_url }}">{% trans "Import from archive" %}</a></li>
     {% endif %}
