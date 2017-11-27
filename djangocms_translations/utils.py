@@ -3,6 +3,7 @@ from itertools import chain
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms import modelform_factory
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
@@ -44,6 +45,30 @@ def get_plugin_form_class(plugin_type, fields):
         exclude=plugin_fields_disabled,
     )
     return plugin_form_class
+
+
+def get_plugin_form(plugin_type, data):
+    _data = data.copy()
+    plugin_form_class = get_plugin_form_class(plugin_type, fields=data.keys())
+    multi_value_fields = [
+        (name, field) for name, field in plugin_form_class.base_fields.items()
+        if hasattr(field.widget, 'decompress') and name in data
+    ]
+
+    for name, field in multi_value_fields:
+        # The value used on the form data is compressed,
+        # and the form contains multi-value fields which expect
+        # a decompressed value.
+        compressed = data[name]
+
+        try:
+            decompressed = field.widget.decompress(compressed)
+        except ObjectDoesNotExist:
+            break
+
+        for pos, value in enumerate(decompressed):
+            _data['{}_{}'.format(name, pos)] = value
+    return plugin_form_class(_data)
 
 
 def add_domain(url, domain=None):

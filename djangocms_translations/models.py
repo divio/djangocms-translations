@@ -22,7 +22,7 @@ from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
-from .utils import get_plugin_form_class
+from .utils import get_plugin_form, get_plugin_form_class
 
 
 def _get_placeholder_slot(archived_placeholder):
@@ -295,35 +295,11 @@ class ArchivedPlaceholder(models.Model):
             if parent and parent.__class__ != CMSPlugin:
                 parent = parent.cmsplugin_ptr
 
-            form_data = archived_plugin.data.copy()
-            plugin_form_class = get_plugin_form_class(
+            plugin_form = get_plugin_form(
                 archived_plugin.plugin_type,
-                fields=form_data.keys(),
+                data=archived_plugin.data,
             )
-            plugin_form = plugin_form_class(form_data or None)
-            multi_value_fields = [
-                (name, field) for name, field in plugin_form.fields.items()
-                if hasattr(field.widget, 'decompress') and name in form_data
-            ]
-
             data_is_valid = plugin_form.is_valid()
-
-            if multi_value_fields and plugin_form.is_bound and not data_is_valid:
-                # The value used on the form data is compressed,
-                # and the form contains multi-value fields which expect a decompressed
-                # value. Try and decompress the value, then see if form is valid.
-                for name, field in multi_value_fields:
-                    compressed = form_data[name]
-
-                    try:
-                        decompressed = field.widget.decompress(compressed)
-                    except ObjectDoesNotExist:
-                        break
-
-                    for pos, value in enumerate(decompressed):
-                        form_data['{}_{}'.format(name, pos)] = value
-                else:
-                    data_is_valid = plugin_form_class(form_data).is_valid()
 
             plugin = archived_plugin.restore(
                 placeholder=self.placeholder,

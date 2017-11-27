@@ -17,7 +17,7 @@ from cms.operations import ADD_PLUGIN
 from cms.plugin_pool import plugin_pool
 
 from . import models, views
-from .utils import get_plugin_form_class, pretty_json
+from .utils import get_plugin_form, pretty_json
 
 
 class AllReadOnlyFieldsMixin(object):
@@ -238,16 +238,16 @@ class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
         archived_plugin = plugin.trans_archived_plugin
         plugin_class = plugin_pool.get_plugin(plugin.plugin_type)
         plugin_instance = plugin_class(plugin_class.model, self.admin_site)
+
+        # Let django clean the data and provide us with valid initial data.
+        # This addresses an issue where certain fields expect relationships
+        # to exist even if the value is just initial data.
         form_data = archived_plugin.data.copy()
-        plugin_form_class = get_plugin_form_class(plugin.plugin_type, fields=form_data.keys())
-        plugin_form = plugin_form_class(form_data)
+        plugin_form = get_plugin_form(plugin.plugin_type, data=form_data)
         plugin_form.full_clean()
 
-        for field in plugin_form.errors:
-            if field in form_data:
-                # remove invalid initial data.
-                # some fields (Filer) can raise exceptions if the initial data
-                # value points to an object that does not exist.
+        for field in list(form_data.keys()):
+            if not plugin_form.cleaned_data.get(field):
                 del form_data[field]
 
         # Setting attributes on the form class is perfectly fine.
