@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
@@ -22,7 +23,10 @@ from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
-from .utils import get_plugin_form, get_plugin_form_class
+from .utils import get_plugin_form
+
+
+logger = logging.getLogger('djangocms_translations')
 
 
 def _get_placeholder_slot(archived_placeholder):
@@ -152,6 +156,7 @@ class TranslationRequest(models.Model):
         try:
             placeholders = self.provider.get_import_data()
         except ValueError:
+            logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         try:
@@ -160,8 +165,9 @@ class TranslationRequest(models.Model):
                 page=self.cms_page,
                 language=self.target_language
             )
-        except IntegrityError:
+        except (IntegrityError, ObjectDoesNotExist):
             self._set_import_archive()
+            logger.exception("Failed to import plugins from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         self.set_status(self.STATES.IMPORTED, commit=False)
@@ -221,7 +227,7 @@ class TranslationRequest(models.Model):
 
             try:
                 ar_placeholder._import_plugins(bound_plugins)
-            except IntegrityError:
+            except (IntegrityError, ObjectDoesNotExist):
                 return False
 
 
