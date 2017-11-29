@@ -3,7 +3,7 @@
 <html class="cms-overflow">
 <head>
     <meta charset="UTF-8">
-    <title>Some title goes here</title>
+    <title>Adjust import data</title>
     {% render_block "css" %}
 </head>
 <body>
@@ -12,5 +12,29 @@
     {% language cms_toolbar.toolbar_language %}
         {{ toolbar.structure_renderer.render }}
     {% endlanguage %}
+    <script type="text/javascript">
+        (function () {
+            var xPath = function (expression) {
+                var results = [];
+                var xPathResult = document.evaluate(expression, document, null, XPathResult.ANY_TYPE, null);
+
+                var result = xPathResult.iterateNext();
+
+                while (result) {
+                    results.push(result);
+                    result = xPathResult.iterateNext();
+                }
+
+                return results;
+            }
+
+            try {
+                var $ = CMS.$;
+                $(xPath('//*[contains(text(), "<Empty>")]')).closest('.cms-dragitem').css('background', '#ff9696')
+            } catch(e) {
+                // xpath not supported
+            }
+        })();
+    </script>
 </body>
 </html>
