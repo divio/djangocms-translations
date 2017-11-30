@@ -7,8 +7,8 @@ Django CMS plugin for translations.
 Installation
 ============
 
-Aldryn Platform Users
----------------------
+Divio Cloud Users
+-----------------
 
 Choose a site you want to install the add-on to from the dashboard. Then go
 to ``Apps -> Install app`` and click ``Install`` next to ``django CMS Translations`` app.
