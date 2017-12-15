@@ -20,6 +20,19 @@ Manual Installation
 
 ::
 
-    pip install djangocms-translations
+    git clone git@github.com:divio/djangocms-translations.git
+    cd djangocms-translations
+    python setup.py develop
+
+    # We need djangocms-transfer
+    git clone git@github.com:divio/djangocms-transfer.git ../djangocms-transfer
+    cd ../djangocms-transfer
+    python setup.py install
+
+    # We need django-cms DEVELOP branch
+    git clone git@github.com:divio/django-cms.git ../django-cms
+    cd ../django-cms
+    git checkout develop
+    python setup.py install
 
 Add ``djangocms_translations`` to ``INSTALLED_APPS``.

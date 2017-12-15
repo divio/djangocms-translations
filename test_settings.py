@@ -3,9 +3,6 @@ from __future__ import unicode_literals
 
 HELPER_SETTINGS = {
     'TIME_ZONE': 'Europe/Zurich',
-    'INSTALLED_APPS': [
-        'djangocms_translations',
-    ],
     'DATABASES': {
         'default': {
             # 'ENGINE': 'django.db.backends.postgresql',
