@@ -1,21 +1,15 @@
 from django import forms
-from django.forms import Select
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
 
 from cms.models import Page
 
-from .utils import get_languages_for_current_site
 from . import models
 
 
 class CreateTranslationForm(forms.ModelForm):
-    cms_page = forms.ModelChoiceField(
-        queryset=Page.objects.drafts(),
-        widget=forms.widgets.HiddenInput(),
-    )
+    cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
 
     class Meta:
         model = models.TranslationRequest
@@ -26,16 +20,9 @@ class CreateTranslationForm(forms.ModelForm):
             'target_language',
         ]
 
-        widgets = {
-            'source_language': Select,
-            'target_language': Select,
-        }
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, user, *args, **kwargs):
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
-        self.fields['provider_backend'].choices = self.fields['provider_backend'].choices[1:]
-        for field in ('source_language', 'target_language'):
-            self.fields[field] = forms.ChoiceField(choices=self.build_language_choices())
+        self.user = user
 
     @cached_property
     def selected_page(self):
@@ -47,14 +34,8 @@ class CreateTranslationForm(forms.ModelForm):
         if data.get('cms_page'):
             return Page.objects.drafts().get(pk=data['cms_page'])
 
-    def build_language_choices(self):
-        return [
-            (lang['code'], _(lang['name']))
-            for lang in get_languages_for_current_site()
-        ]
-
     def save(self, commit=True):
-        self.instance.user = self.initial['user']
+        self.instance.user = self.user
         return super(CreateTranslationForm, self).save(commit)
 
 

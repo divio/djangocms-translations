@@ -104,19 +104,17 @@ class CreateTranslationRequestView(CreateView):
     def get_success_url(self):
         return reverse('admin:choose-translation-quote', kwargs={'pk': self.object.pk})
 
+    def get_form_kwargs(self):
+        form_kwargs = super(CreateTranslationRequestView, self).get_form_kwargs()
+        form_kwargs['user'] = self.request.user
+        form_kwargs['initial'] = self.request.GET.dict()
+        return form_kwargs
+
     def form_valid(self, form):
         response = super(CreateTranslationRequestView, self).form_valid(form)
         self.object.export_content_from_cms()
         self.object.get_quote_from_provider()
         return response
-
-    def get_initial(self):
-        return {
-            'source_language': self.request.GET.get('source_lang') or None,
-            'target_language': self.request.GET.get('target_lang') or None,
-            'user': self.request.user,
-            'cms_page': self.request.GET.get('cms_page_id'),
-        }
 
 
 class ChooseTranslationQuoteView(UpdateView):

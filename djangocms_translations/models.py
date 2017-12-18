@@ -23,7 +23,7 @@ from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
-from .utils import get_plugin_form
+from .utils import get_plugin_form, get_languages_for_current_site
 
 
 logger = logging.getLogger('djangocms_translations')
@@ -31,6 +31,13 @@ logger = logging.getLogger('djangocms_translations')
 
 def _get_placeholder_slot(archived_placeholder):
     return archived_placeholder.slot
+
+
+def language_choices():
+    return [
+        (lang['code'], _(lang['name']))
+        for lang in get_languages_for_current_site()
+    ]
 
 
 class TranslationRequest(models.Model):
@@ -61,8 +68,8 @@ class TranslationRequest(models.Model):
 
     cms_page = PageField()
 
-    source_language = models.CharField(max_length=10)
-    target_language = models.CharField(max_length=10)
+    source_language = models.CharField(max_length=10, choices=language_choices())
+    target_language = models.CharField(max_length=10, choices=language_choices())
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
     provider_options = JSONField(default={}, blank=True)
     export_content = JSONField(default={}, blank=True)
