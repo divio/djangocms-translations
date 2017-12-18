@@ -9,7 +9,9 @@ REQUIREMENTS = [
     'yurl',
     'django-extended-choices',
     'requests',
-    # 'django-cms',  # TODO: We need the develop branch
+
+    # 'djangocms-transfer',  # See README
+    # 'django-cms',  # See README
     'django>=1.10,<1.11',  # TODO: 'RadioFieldRenderer' was removed in 1.11
 ]
 
