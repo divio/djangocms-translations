@@ -8,7 +8,6 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-# from django.db.models.fields.related_descriptors import RelatedObjectDoesNotExist
 from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone

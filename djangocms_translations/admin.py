@@ -192,14 +192,14 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 name='translation-request-provider-callback',
             ),
             url(
-               r'(?P<pk>\w+)/adjust-import-data/$',
-               views.adjust_import_data_view,
-               name='translation-request-adjust-import-data',
+                r'(?P<pk>\w+)/adjust-import-data/$',
+                views.adjust_import_data_view,
+                name='translation-request-adjust-import-data',
             ),
             url(
-               r'(?P<pk>\w+)/import-from-archive/$',
-               views.import_from_archive,
-               name='translation-request-import-from-archive',
+                r'(?P<pk>\w+)/import-from-archive/$',
+                views.import_from_archive,
+                name='translation-request-import-from-archive',
             ),
 
             # has to be the last one

@@ -37,7 +37,7 @@ Developing via DjangoCMS-helper
 
     # Add a POSTGRES database (below I'm using user=password=database_name=djangocmstranslations)
 
-    # Migrate django.contrib.sites app (yes, we need this app migrate before the others)
+    # Migrate django.contrib.sites app (yes, we need this app to migrate before the others)
     DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations djangocms-helper django.contrib.sites migrate --cms --extra-settings=tests/settings.py
 
     # Migrate our app per se
@@ -54,3 +54,12 @@ Running tests
 
     # Assuming you're using postgres user=password=database_name=djangocmstranslations
     DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations make test
+
+
+Running tox
+-------------------
+
+::
+
+    # Assuming you're using postgres user=password=database_name=djangocmstranslations
+    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER=XXX DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD=XXX tox

@@ -1,6 +1,5 @@
 from django import forms
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
-from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
 from cms.models import Page
