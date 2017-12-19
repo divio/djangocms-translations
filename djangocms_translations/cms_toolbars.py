@@ -25,8 +25,10 @@ class TranslationsToolbar(CMSToolbar):
         menu.add_sideframe_item(_('Overview'), url=overview_url)
 
         current_language = get_language_from_request(self.request)
-        base_querystring = 'cms_page={}&source_language={}'.format(page.id, current_language)
-        base_url = '{}?{}'.format(reverse('admin:create-translation-request'), base_querystring)
+        base_url = (
+            '{url}?source_cms_page={page_id}&target_cms_page={page_id}&source_language={source_language}'
+            .format(url=reverse('admin:create-translation-request'), page_id=page.id, source_language=current_language)
+        )
 
         translate_menu = menu.get_or_create_menu(
             'djangocms_translations-translate',

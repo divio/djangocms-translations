@@ -127,7 +127,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         data.update({
             'OrderName': 'djangocms-translations order #{}'.format(request.pk),
             'ReferenceData': request.pk,  # TODO: we should add a secret token here and then recheck when importing the content
-            'SystemName': request.cms_page.site.name,
+            'SystemName': request.source_cms_page.site.name,
             'ComponentName': 'djangocms-translations',
             'ComponentVersion': djangocms_translations_version,
             'CallbackUrl': add_domain(reverse('admin:translation-request-provider-callback', kwargs={'pk': request.pk})),

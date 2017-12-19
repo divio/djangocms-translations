@@ -9,30 +9,22 @@ from . import models
 
 
 class CreateTranslationForm(forms.ModelForm):
-    cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
+    source_cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
+    target_cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
 
     class Meta:
         model = models.TranslationRequest
         fields = [
-            'cms_page',
-            'provider_backend',
+            'source_cms_page',
             'source_language',
+            'target_cms_page',
             'target_language',
+            'provider_backend',
         ]
 
     def __init__(self, user, *args, **kwargs):
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
         self.user = user
-
-    @cached_property
-    def selected_page(self):
-        if self.is_valid():
-            data = self.cleaned_data
-        else:
-            data = self.data or self.initial
-
-        if data.get('cms_page'):
-            return Page.objects.drafts().get(pk=data['cms_page'])
 
     def save(self, commit=True):
         self.instance.user = self.user
