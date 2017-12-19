@@ -35,31 +35,17 @@ Developing via DjangoCMS-helper
 
 ::
 
-    # Add a POSTGRES database (below I'm using user=password=database_name=djangocmstranslations)
+    # Add a POSTGRES database. Consider using user=password=database_name=djangocmstranslations as this is the default for tests/settings.py. Otherwise you'll need to set DJANGOCMS_TRANSLATIONS_DATABASE_URL env var accordingly.
 
     # Migrate django.contrib.sites app (yes, we need this app to migrate before the others)
-    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations djangocms-helper django.contrib.sites migrate --cms --extra-settings=tests/settings.py
+    djangocms-helper django.contrib.sites migrate --cms --extra-settings=tests/settings.py
 
     # Migrate our app per se
-    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
+    djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
 
-    # Set up a dev accont for supertext (https://dev.supertext.ch/en/signup) and use it
-    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER=XXX DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD=XXX djangocms-helper djangocms_translations runserver --cms --extra-settings=tests/settings.py
+    # Run server
+    djangocms-helper djangocms_translations runserver --cms --extra-settings=tests/settings.py
 
-
-Running tests
--------------------
-
-::
-
-    # Assuming you're using postgres user=password=database_name=djangocmstranslations
-    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations make test
-
-
-Running tox
--------------------
-
-::
-
-    # Assuming you're using postgres user=password=database_name=djangocmstranslations
-    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER=XXX DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD=XXX tox
+    # In order to test the supertext integration:
+    # 1) Set up a dev accont for supertext (https://dev.supertext.ch/en/signup) and use it
+    # 2) Run server setting DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER and DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD env vars
