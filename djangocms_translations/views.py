@@ -76,7 +76,7 @@ def import_from_archive(request, pk):
         raise Http404
 
     if request.method == 'POST':
-        source_cms_page = trans_request.source_cms_page
+        target_cms_page = trans_request.target_cms_page
 
         try:
             trans_request._import_from_archive()
@@ -85,7 +85,7 @@ def import_from_archive(request, pk):
             redirect_to = reverse('admin:translation-request-adjust-import-data', args=(pk,))
         else:
             messages.error(request, ugettext('Plugins imported successfully.'))
-            redirect_to = source_cms_page.get_absolute_url(trans_request.target_language)
+            redirect_to = target_cms_page.get_absolute_url(trans_request.target_language)
         return redirect(redirect_to)
 
     context = {

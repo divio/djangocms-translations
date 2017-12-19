@@ -5,9 +5,10 @@ import logging
 
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+# from django.db.models.fields.related_descriptors import RelatedObjectDoesNotExist
 from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
@@ -167,7 +168,7 @@ class TranslationRequest(models.Model):
         try:
             import_plugins_to_page(
                 placeholders=placeholders,
-                page=self.source_cms_page,
+                page=self.target_cms_page,
                 language=self.target_language
             )
         except (IntegrityError, ObjectDoesNotExist):
@@ -193,7 +194,7 @@ class TranslationRequest(models.Model):
         }
         page_placeholders = (
             self
-            .source_cms_page
+            .target_cms_page
             .placeholders
             .filter(slot__in=plugins_by_placeholder)
         )
@@ -234,6 +235,29 @@ class TranslationRequest(models.Model):
                 ar_placeholder._import_plugins(bound_plugins)
             except (IntegrityError, ObjectDoesNotExist):
                 return False
+
+    def clean(self):
+        def _get_language_labels(languages):
+            language_choices_dict = dict(language_choices())
+            language_labels = [language_choices_dict[lang] for lang in languages]
+            return '"{}".'.format('", "'.join(map(str, language_labels)))
+
+        self.clean_fields()
+
+        for field_prefix in ('source', 'target'):
+            page_field_name = '{}_cms_page'.format(field_prefix)
+            page = getattr(self, page_field_name)
+            page_languages = page.languages.split(',')
+            language_field_name = '{}_language'.format(field_prefix)
+            language = getattr(self, language_field_name)
+
+            if language not in page_languages:
+                raise ValidationError({
+                    language_field_name:
+                    _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
+                })
+
+        return super(TranslationRequest, self).clean()
 
 
 class TranslationQuote(models.Model):

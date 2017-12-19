@@ -24,11 +24,7 @@ class CreateTranslationForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
-        self.user = user
-
-    def save(self, commit=True):
-        self.instance.user = self.user
-        return super(CreateTranslationForm, self).save(commit)
+        self.instance.user = user
 
 
 class QuoteInput(RadioChoiceInput):
