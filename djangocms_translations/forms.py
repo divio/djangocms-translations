@@ -2,15 +2,10 @@ from django import forms
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.safestring import mark_safe
 
-from cms.models import Page
-
 from . import models
 
 
 class CreateTranslationForm(forms.ModelForm):
-    source_cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
-    target_cms_page = forms.ModelChoiceField(queryset=Page.objects.drafts())
-
     class Meta:
         model = models.TranslationRequest
         fields = [
@@ -21,9 +16,13 @@ class CreateTranslationForm(forms.ModelForm):
             'provider_backend',
         ]
 
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
-        self.instance.user = user
+
+    def save(self, *args, **kwargs):
+        self.instance.user = self.user
+        return super(CreateTranslationForm, self).save(*args, **kwargs)
 
 
 class QuoteInput(RadioChoiceInput):

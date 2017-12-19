@@ -37,10 +37,7 @@ Developing via DjangoCMS-helper
 
     # Add a POSTGRES database. Consider using user=password=database_name=djangocmstranslations as this is the default for tests/settings.py. Otherwise you'll need to set DJANGOCMS_TRANSLATIONS_DATABASE_URL env var accordingly.
 
-    # Migrate django.contrib.sites app (yes, we need this app to migrate before the others)
-    djangocms-helper django.contrib.sites migrate --cms --extra-settings=tests/settings.py
-
-    # Migrate our app per se
+    # Migrate database
     djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
 
     # Run server

@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 import cms.models.fields
+from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
@@ -36,26 +37,26 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='translationrequest',
             name='source_cms_page',
-            field=cms.models.fields.PageField(on_delete=django.db.models.deletion.CASCADE, related_name='translation_requests_as_source', to='cms.Page'),
+            field=cms.models.fields.PageField(on_delete=django.db.models.deletion.PROTECT, related_name='translation_requests_as_source', to='cms.Page'),
         ),
 
         migrations.AlterField(
             model_name='translationrequest',
             name='source_language',
-            field=models.CharField(choices=djangocms_translations.models.language_choices(), max_length=10),
+            field=models.CharField(choices=settings.LANGUAGES, max_length=10),
         ),
 
         migrations.AlterField(
             model_name='translationrequest',
             name='target_language',
-            field=models.CharField(choices=djangocms_translations.models.language_choices(), max_length=10),
+            field=models.CharField(choices=settings.LANGUAGES, max_length=10),
         ),
 
         # 1: create field as nullable
         migrations.AddField(
             model_name='translationrequest',
             name='target_cms_page',
-            field=cms.models.fields.PageField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translation_requests_as_target', to='cms.Page'),
+            field=cms.models.fields.PageField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='translation_requests_as_target', to='cms.Page'),
         ),
 
         # 2: populate field
@@ -65,6 +66,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='translationrequest',
             name='target_cms_page',
-            field=cms.models.fields.PageField(on_delete=django.db.models.deletion.CASCADE, related_name='translation_requests_as_target', to='cms.Page'),
+            field=cms.models.fields.PageField(on_delete=django.db.models.deletion.PROTECT, related_name='translation_requests_as_target', to='cms.Page'),
         ),
     ]

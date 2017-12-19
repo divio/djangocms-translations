@@ -27,7 +27,7 @@ class TranslationsToolbar(CMSToolbar):
         current_language = get_language_from_request(self.request)
         base_url = (
             '{url}?source_cms_page={page_id}&target_cms_page={page_id}&source_language={source_language}'
-            .format(url=reverse('admin:create-translation-request'), page_id=page.id, source_language=current_language)
+            .format(url=reverse('admin:create-translation-request'), page_id=page.pk, source_language=current_language)
         )
 
         translate_menu = menu.get_or_create_menu(

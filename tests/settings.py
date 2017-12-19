@@ -30,12 +30,17 @@ HELPER_SETTINGS = {
                 'code': 'pt-br',
                 'name': 'Brazilian Portugues',
             },
+            {
+                'code': 'ch-de',
+                'name': 'Deutsch',
+            },
         ],
     },
     'LANGUAGE_CODE': 'en',
     'LANGUAGES': [
         ('en', 'English'),
         ('pt-br', 'Brazilian Portugues'),
+        ('ch-de', 'Deutsch'),
     ],
     'SITE_ID': 1,
 }
