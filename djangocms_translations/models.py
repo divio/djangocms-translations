@@ -22,6 +22,7 @@ from extended_choices import Choices
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
+import six
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
 from .utils import get_plugin_form
@@ -32,6 +33,12 @@ logger = logging.getLogger('djangocms_translations')
 
 def _get_placeholder_slot(archived_placeholder):
     return archived_placeholder.slot
+
+
+def _get_language_labels(languages):
+    language_choices_dict = dict(settings.LANGUAGES)
+    language_labels = [language_choices_dict[lang] for lang in languages]
+    return '"{}".'.format('", "'.join(map(six.text_type, language_labels)))
 
 
 class TranslationRequest(models.Model):
@@ -230,19 +237,14 @@ class TranslationRequest(models.Model):
                 return False
 
     def clean(self, exclude=None):
-        def _get_language_labels(languages):
-            language_choices_dict = dict(settings.LANGUAGES)
-            language_labels = [language_choices_dict[lang] for lang in languages]
-            return '"{}".'.format('", "'.join(map(str, language_labels)))
-
-        page_languages = self.source_cms_page.languages.split(',')
+        page_languages = self.source_cms_page.get_languages()
         if self.source_language not in page_languages:
             raise ValidationError({
                 'source_language':
                 _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
             })
 
-        page_languages = self.target_cms_page.languages.split(',')
+        page_languages = self.target_cms_page.get_languages()
         if self.target_language not in page_languages:
             raise ValidationError({
                 'target_language':
