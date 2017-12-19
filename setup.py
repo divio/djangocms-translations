@@ -10,8 +10,8 @@ REQUIREMENTS = [
     'django-extended-choices',
     'requests',
 
-    # 'djangocms-transfer',  # See README
-    # 'django-cms',  # See README
+    # 'djangocms-transfer',  # Private repo
+    # 'django-cms',  # Develop branch
     'django>=1.10,<1.11',  # TODO: 'RadioFieldRenderer' was removed in 1.11
 ]
 
