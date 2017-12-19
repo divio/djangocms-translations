@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
-
 import json
 import logging
+
+import six
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -22,7 +23,6 @@ from extended_choices import Choices
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
-import six
 
 from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
 from .utils import get_plugin_form
