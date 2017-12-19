@@ -55,3 +55,12 @@ Developing via DjangoCMS-helper
 
     # Set up a dev accont for supertext (https://dev.supertext.ch/en/signup) and use it
     DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER=XXX DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD=XXX djangocms-helper djangocms_translations runserver --cms --extra-settings=tests/settings.py
+
+
+Running tests
+-------------------
+
+::
+
+    # Assuming you're using postgres user=password=database_name=djangocmstranslations
+    DATABASE_URL=postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations make test
