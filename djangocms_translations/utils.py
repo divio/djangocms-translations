@@ -8,8 +8,6 @@ from django.forms import modelform_factory
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
 
-from cms.utils.i18n import get_language_objects
-
 from yurl import URL
 
 from pygments import highlight
@@ -22,10 +20,6 @@ from .conf import TRANSLATIONS_CONF
 
 
 USE_HTTPS = getattr(settings, 'URLS_USE_HTTPS', False)
-
-
-def get_languages_for_current_site():
-    return get_language_objects(Site.objects.get_current().pk)
 
 
 def get_plugin_form_class(plugin_type, fields):

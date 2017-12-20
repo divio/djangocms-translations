@@ -8,17 +8,15 @@
 		{% for field in form.hidden_fields %}
 			<p>{{ field }}</p>
 		{% endfor %}
+
+        {{ form.non_field_errors }}
+
 	    <fieldset class="frm-horizontal">
-			{% if form.selected_page %}
-                {% page_attribute "page_title" form.selected_page as page_title %}
-				<p>{% blocktrans %}Selected page: {{ page_title }}{% endblocktrans %}</p>
-			{% else %}
-				<p>{% trans "No page selected" %}</p>
-			{% endif %}
 			{% for field in form.visible_fields %}
 				<p>
                     {{ field.label_tag }}
                     {{ field }}
+                    {{ field.errors }}
                 </p>
 			{% endfor %}
 	    </fieldset>

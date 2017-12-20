@@ -76,7 +76,7 @@ def import_from_archive(request, pk):
         raise Http404
 
     if request.method == 'POST':
-        cms_page = trans_request.cms_page
+        target_cms_page = trans_request.target_cms_page
 
         try:
             trans_request._import_from_archive()
@@ -85,7 +85,7 @@ def import_from_archive(request, pk):
             redirect_to = reverse('admin:translation-request-adjust-import-data', args=(pk,))
         else:
             messages.error(request, ugettext('Plugins imported successfully.'))
-            redirect_to = cms_page.get_absolute_url(trans_request.target_language)
+            redirect_to = target_cms_page.get_absolute_url(trans_request.target_language)
         return redirect(redirect_to)
 
     context = {
@@ -104,19 +104,17 @@ class CreateTranslationRequestView(CreateView):
     def get_success_url(self):
         return reverse('admin:choose-translation-quote', kwargs={'pk': self.object.pk})
 
+    def get_form_kwargs(self):
+        form_kwargs = super(CreateTranslationRequestView, self).get_form_kwargs()
+        form_kwargs['user'] = self.request.user
+        form_kwargs['initial'] = self.request.GET.dict()
+        return form_kwargs
+
     def form_valid(self, form):
         response = super(CreateTranslationRequestView, self).form_valid(form)
         self.object.export_content_from_cms()
         self.object.get_quote_from_provider()
         return response
-
-    def get_initial(self):
-        return {
-            'source_language': self.request.GET.get('source_lang') or None,
-            'target_language': self.request.GET.get('target_lang') or None,
-            'user': self.request.user,
-            'cms_page': self.request.GET.get('cms_page_id'),
-        }
 
 
 class ChooseTranslationQuoteView(UpdateView):

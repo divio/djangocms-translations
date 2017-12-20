@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
-
 import json
 import logging
 
+import six
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db import IntegrityError
@@ -33,6 +35,12 @@ def _get_placeholder_slot(archived_placeholder):
     return archived_placeholder.slot
 
 
+def _get_language_labels(languages):
+    language_choices_dict = dict(settings.LANGUAGES)
+    language_labels = [language_choices_dict[lang] for lang in languages]
+    return '"{}".'.format('", "'.join(map(six.text_type, language_labels)))
+
+
 class TranslationRequest(models.Model):
     STATES = Choices(
         ('DRAFT', 'draft', _('Draft')),
@@ -53,16 +61,14 @@ class TranslationRequest(models.Model):
 
     user = models.ForeignKey(User)
     state = models.CharField(choices=STATES, default=STATES.DRAFT, max_length=100)
-
     date_created = models.DateTimeField(auto_now_add=True)
     date_submitted = models.DateTimeField(blank=True, null=True)
     date_received = models.DateTimeField(blank=True, null=True)
     date_imported = models.DateTimeField(blank=True, null=True)
-
-    cms_page = PageField()
-
-    source_language = models.CharField(max_length=10)
-    target_language = models.CharField(max_length=10)
+    source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
+    source_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
+    target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
+    target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
     provider_options = JSONField(default={}, blank=True)
     export_content = JSONField(default={}, blank=True)
@@ -90,10 +96,10 @@ class TranslationRequest(models.Model):
         return not status == self.STATES.IMPORT_FAILED
 
     def export_content_from_cms(self):
-        if not self.cms_page and not self.source_language:
+        if not self.source_cms_page and not self.source_language:
             raise RuntimeError('Set a cms page and language for export')
 
-        export_data = get_page_export_data(self.cms_page, self.source_language)
+        export_data = get_page_export_data(self.source_cms_page, self.source_language)
         self.export_content = json.dumps(export_data, cls=DjangoJSONEncoder)
         self.save(update_fields=('export_content',))
         self.set_status(self.STATES.OPEN)
@@ -162,7 +168,7 @@ class TranslationRequest(models.Model):
         try:
             import_plugins_to_page(
                 placeholders=placeholders,
-                page=self.cms_page,
+                page=self.target_cms_page,
                 language=self.target_language
             )
         except (IntegrityError, ObjectDoesNotExist):
@@ -188,7 +194,7 @@ class TranslationRequest(models.Model):
         }
         page_placeholders = (
             self
-            .cms_page
+            .target_cms_page
             .placeholders
             .filter(slot__in=plugins_by_placeholder)
         )
@@ -207,7 +213,7 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
-        page_placeholders = self.cms_page.get_declared_placeholders()
+        page_placeholders = self.source_cms_page.get_declared_placeholders()
         plugins_by_placeholder = {
             pl.slot: pl.plugins
             for pl in self.provider.get_import_data() if pl.plugins
@@ -229,6 +235,26 @@ class TranslationRequest(models.Model):
                 ar_placeholder._import_plugins(bound_plugins)
             except (IntegrityError, ObjectDoesNotExist):
                 return False
+
+    def clean(self, exclude=None):
+        page_languages = self.source_cms_page.get_languages()
+        if self.source_language not in page_languages:
+            raise ValidationError({
+                'source_language':
+                _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
+            })
+
+        page_languages = self.target_cms_page.get_languages()
+        if self.target_language not in page_languages:
+            raise ValidationError({
+                'target_language':
+                _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
+            })
+
+        if (self.source_cms_page, self.source_language) == (self.target_cms_page, self.target_language):
+            raise ValidationError(_('One can not translate the same page to the same language.'))
+
+        return super(TranslationRequest, self).clean()
 
 
 class TranslationQuote(models.Model):

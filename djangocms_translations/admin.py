@@ -77,7 +77,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     list_filter = ('state',)
     list_display = (
         'date_created',
-        'pretty_cms_page',
+        'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'status',
@@ -93,7 +93,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             'date_received',
             'date_imported',
         ),
-        'pretty_cms_page',
+        'pretty_source_cms_pages',
         (
             'pretty_source_language',
             'pretty_target_language',
@@ -110,7 +110,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'date_submitted',
         'date_received',
         'date_imported',
-        'pretty_cms_page',
+        'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'pretty_provider_options',
@@ -119,14 +119,15 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'selected_quote',
     )
 
-    def pretty_cms_page(self, obj):
+    def pretty_source_cms_pages(self, obj):
+        source = obj.source_cms_page
+        target = obj.target_cms_page
+
         return mark_safe(
-            '<a href="{}" target="_parent">{}</a>'.format(
-                obj.cms_page.get_absolute_url(),
-                obj.cms_page,
-            )
+            '<a href="{}" target="_parent">{}</a> --> <a href="{}" target="_parent">{}</a>'
+            .format(source.get_absolute_url(), source, target.get_absolute_url(), target)
         )
-    pretty_cms_page.short_description = _('CMS Page')
+    pretty_source_cms_pages.short_description = _('CMS Pages (from --> to)')
 
     def _get_language_info(self, lang_code):
         return get_language_info(lang_code)['name']
@@ -191,14 +192,14 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 name='translation-request-provider-callback',
             ),
             url(
-               r'(?P<pk>\w+)/adjust-import-data/$',
-               views.adjust_import_data_view,
-               name='translation-request-adjust-import-data',
+                r'(?P<pk>\w+)/adjust-import-data/$',
+                views.adjust_import_data_view,
+                name='translation-request-adjust-import-data',
             ),
             url(
-               r'(?P<pk>\w+)/import-from-archive/$',
-               views.import_from_archive,
-               name='translation-request-import-from-archive',
+                r'(?P<pk>\w+)/import-from-archive/$',
+                views.import_from_archive,
+                name='translation-request-import-from-archive',
             ),
 
             # has to be the last one

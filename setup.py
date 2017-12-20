@@ -3,12 +3,16 @@ from setuptools import setup, find_packages
 from djangocms_translations import __version__
 
 REQUIREMENTS = [
-    'django-cms>=3.0',
     'django-appconf>=1.0,<2',
     'django-extended-choices',
     'pygments',
     'yurl',
     'django-extended-choices',
+    'requests',
+
+    # 'djangocms-transfer',  # Private repo
+    # 'django-cms',  # Develop branch
+    'django>=1.10,<1.11',  # TODO: 'RadioFieldRenderer' was removed in 1.11
 ]
 
 CLASSIFIERS = [
@@ -38,4 +42,5 @@ setup(
     classifiers=CLASSIFIERS,
     include_package_data=True,
     zip_safe=False,
+    test_suite='tests.settings.run',
 )
