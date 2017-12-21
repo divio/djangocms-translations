@@ -101,9 +101,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         # convert back into djangocms-transfer format
         data = json.dumps([{
-            'placeholder': placeholder,
+            'placeholder': p,
             'plugins': list(plugins.values()),
-        } for placeholder, plugins in export_content.items()])
+        } for p, plugins in export_content.items()])
         return json.loads(data, object_hook=_object_version_data_hook)
 
     def get_quote(self):
