@@ -16,6 +16,15 @@ HELPER_SETTINGS = {
     )},
 
     'INSTALLED_APPS': [
+        'djangocms_text_ckeditor',
+        'absolute',
+        'captcha',
+        'easy_thumbnails',
+        'emailit',
+        'filer',
+        'aldryn_forms',
+        'aldryn_forms.contrib.email_notifications',
+        'aldryn_bootstrap3',
     ],
     'ALLOWED_HOSTS': [
         'localhost'
@@ -43,6 +52,10 @@ HELPER_SETTINGS = {
         ('ch-de', 'Deutsch'),
     ],
     'SITE_ID': 1,
+
+    'DJANGOCMS_TRANSLATIONS_CONF': {
+        'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
+    },
 }
 
 

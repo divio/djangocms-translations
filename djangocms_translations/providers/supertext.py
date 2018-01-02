@@ -9,9 +9,28 @@ import requests
 from djangocms_transfer.forms import _object_version_data_hook
 
 from .. import __version__ as djangocms_translations_version
+from ..conf import TRANSLATIONS_CONF
 from ..utils import add_domain, get_translatable_fields
 
 from .base import BaseTranslationProvider, ProviderException
+
+
+def _get_content(raw_content, plugin, plugins):
+    import bs4
+
+    if (plugin['plugin_type'] == 'TextPlugin'):
+        children = [p for p in plugins if p['parent_id'] == plugin['pk']]
+        raw_content_soup = bs4.BeautifulSoup(raw_content, 'html.parser', parse_only=bs4.SoupStrainer('p'))
+
+        for child in children:
+            text_field_child_label_field = TRANSLATIONS_CONF[child['plugin_type']]['text_field_child_label']
+            content = child['data'][text_field_child_label_field]
+            child_soup = raw_content_soup.find('cms-plugin', id=child['pk'])
+            child_soup.string = content
+
+        raw_content = str(raw_content_soup)
+
+    return raw_content
 
 
 class SupertextException(ProviderException):
@@ -53,21 +72,23 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         fields_by_plugin = {}
 
         for placeholder in json.loads(self.request.export_content):
-            for plugin in placeholder['plugins']:
+            plugins = placeholder['plugins']
+
+            for plugin in plugins:
                 plugin_type = plugin['plugin_type']
 
                 if plugin_type not in fields_by_plugin:
                     fields_by_plugin[plugin_type] = get_translatable_fields(plugin_type)
 
+                items = []
                 plugin_data = plugin['data']
-                items = [
-                    {
-                        'Id': field,
-                        'Content': plugin_data[field],
-                    }
-                    for field in fields_by_plugin[plugin_type]
-                    if plugin_data.get(field)
-                ]
+                for field in fields_by_plugin[plugin_type]:
+                    if plugin_data.get(field):
+                        content = _get_content(plugin_data[field], plugin, plugins)
+                        items.append({
+                            'Id': field,
+                            'Content': content,
+                        })
 
                 if items:
                     groups.append({
