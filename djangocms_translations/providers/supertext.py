@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 
 import requests
 
+from djangocms_text_ckeditor.utils import plugin_to_tag, _plugin_tags_to_html
 from djangocms_transfer.forms import _object_version_data_hook
 
 from .. import __version__ as djangocms_translations_version
@@ -15,16 +16,22 @@ from ..utils import add_domain, get_translatable_fields
 from .base import BaseTranslationProvider, ProviderException
 
 
-def _get_content(raw_content, plugin, plugins):
+def _get_content(content, plugin, plugins):
+    def _enrich_text(text):
+        # Based upon django_ckeditor/utils.py, plugin_tags_to_admin_html()
+        def _render_plugin_with_content(obj, match):
+            text_field_child_label_field = TRANSLATIONS_CONF[obj.plugin_type]['text_field_child_label']
+            content = getattr(obj, text_field_child_label_field)
+            return plugin_to_tag(obj, content)
+
+        return _plugin_tags_to_html(text, output_func=_render_plugin_with_content)
+
     if (plugin['plugin_type'] == 'TextPlugin'):
-        children = [p for p in plugins if p['parent_id'] == plugin['pk']]
+        for subplugin in plugins:
+            if subplugin['parent_id'] == plugin['pk']:
+                content = _enrich_text(content)
 
-        for child in children:
-            text_field_child_label_field = TRANSLATIONS_CONF[child['plugin_type']]['text_field_child_label']
-            content = child['data'][text_field_child_label_field]
-            raw_content = raw_content.replace('></cms-plugin>', '>{}</cms-plugin>'.format(content), 1)
-
-    return raw_content
+    return content
 
 
 class SupertextException(ProviderException):
