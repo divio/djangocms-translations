@@ -16,15 +16,8 @@ HELPER_SETTINGS = {
     )},
 
     'INSTALLED_APPS': [
-        'djangocms_text_ckeditor',
-        'absolute',
-        'captcha',
-        'easy_thumbnails',
-        'emailit',
-        'filer',
-        'aldryn_forms',
-        'aldryn_forms.contrib.email_notifications',
-        'aldryn_bootstrap3',
+        'tests',
+        'djangocms_text_ckeditor',  # For tests purposes
     ],
     'ALLOWED_HOSTS': [
         'localhost'

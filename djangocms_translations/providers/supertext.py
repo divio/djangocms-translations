@@ -6,30 +6,23 @@ from django.core.urlresolvers import reverse
 
 import requests
 
-from djangocms_text_ckeditor.utils import plugin_to_tag, _plugin_tags_to_html
+from djangocms_transfer.datastructures import ArchivedPlugin
 from djangocms_transfer.forms import _object_version_data_hook
+from djangocms_transfer.utils import get_plugin_class
 
 from .. import __version__ as djangocms_translations_version
-from ..conf import TRANSLATIONS_CONF
 from ..utils import add_domain, get_translatable_fields
 
 from .base import BaseTranslationProvider, ProviderException
 
 
-def _get_content(content, plugin, plugins):
-    def _enrich_text(text):
-        # Based upon djangocms_text_ckeditor/utils.py, plugin_tags_to_admin_html()
-        def _render_plugin_with_content(obj, match):
-            text_field_child_label_field = TRANSLATIONS_CONF[obj.plugin_type]['text_field_child_label']
-            content = getattr(obj, text_field_child_label_field)
-            return plugin_to_tag(obj, content)
+def _get_content(content, plugin):
+    plugin_class = get_plugin_class(plugin['plugin_type'])
 
-        return _plugin_tags_to_html(text, output_func=_render_plugin_with_content)
-
-    if plugin['plugin_type'] == 'TextPlugin':
-        for subplugin in plugins:
-            if subplugin['parent_id'] == plugin['pk']:
-                content = _enrich_text(content)
+    if hasattr(plugin_class, 'get_djangocms_translation_content'):
+        archived_plugin = ArchivedPlugin(**plugin)
+        instance = archived_plugin.deserialized_instance.object
+        content = plugin_class.get_djangocms_translation_content(instance)
 
     return content
 
@@ -85,7 +78,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 items = [
                     {
                         'Id': field,
-                        'Content': _get_content(plugin_data[field], plugin, plugins),
+                        'Content': _get_content(plugin_data[field], plugin),
                     }
                     for field in fields_by_plugin[plugin_type]
                     if plugin_data.get(field)
