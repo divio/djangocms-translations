@@ -26,7 +26,7 @@ def _get_content(content, plugin, plugins):
 
         return _plugin_tags_to_html(text, output_func=_render_plugin_with_content)
 
-    if (plugin['plugin_type'] == 'TextPlugin'):
+    if plugin['plugin_type'] == 'TextPlugin':
         for subplugin in plugins:
             if subplugin['parent_id'] == plugin['pk']:
                 content = _enrich_text(content)
@@ -81,15 +81,15 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 if plugin_type not in fields_by_plugin:
                     fields_by_plugin[plugin_type] = get_translatable_fields(plugin_type)
 
-                items = []
                 plugin_data = plugin['data']
-                for field in fields_by_plugin[plugin_type]:
-                    if plugin_data.get(field):
-                        content = _get_content(plugin_data[field], plugin, plugins)
-                        items.append({
-                            'Id': field,
-                            'Content': content,
-                        })
+                items = [
+                    {
+                        'Id': field,
+                        'Content': _get_content(plugin_data[field], plugin, plugins),
+                    }
+                    for field in fields_by_plugin[plugin_type]
+                    if plugin_data.get(field)
+                ]
 
                 if items:
                     groups.append({
