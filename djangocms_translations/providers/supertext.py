@@ -63,9 +63,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         fields_by_plugin = {}
 
         for placeholder in json.loads(self.request.export_content):
-            plugins = placeholder['plugins']
-
-            for plugin in plugins:
+            for plugin in placeholder['plugins']:
                 plugin_type = plugin['plugin_type']
 
                 if plugin_type not in fields_by_plugin:
