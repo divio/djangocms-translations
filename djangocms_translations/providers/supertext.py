@@ -18,7 +18,7 @@ from .base import BaseTranslationProvider, ProviderException
 
 def _get_content(content, plugin, plugins):
     def _enrich_text(text):
-        # Based upon django_ckeditor/utils.py, plugin_tags_to_admin_html()
+        # Based upon djangocms_text_ckeditor/utils.py, plugin_tags_to_admin_html()
         def _render_plugin_with_content(obj, match):
             text_field_child_label_field = TRANSLATIONS_CONF[obj.plugin_type]['text_field_child_label']
             content = getattr(obj, text_field_child_label_field)
