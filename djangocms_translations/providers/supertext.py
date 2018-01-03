@@ -16,19 +16,13 @@ from .base import BaseTranslationProvider, ProviderException
 
 
 def _get_content(raw_content, plugin, plugins):
-    import bs4
-
     if (plugin['plugin_type'] == 'TextPlugin'):
         children = [p for p in plugins if p['parent_id'] == plugin['pk']]
-        raw_content_soup = bs4.BeautifulSoup(raw_content, 'html.parser', parse_only=bs4.SoupStrainer('p'))
 
         for child in children:
             text_field_child_label_field = TRANSLATIONS_CONF[child['plugin_type']]['text_field_child_label']
             content = child['data'][text_field_child_label_field]
-            child_soup = raw_content_soup.find('cms-plugin', id=child['pk'])
-            child_soup.string = content
-
-        raw_content = str(raw_content_soup)
+            raw_content = raw_content.replace('></cms-plugin>', '>{}</cms-plugin>'.format(content), 1)
 
     return raw_content
 
