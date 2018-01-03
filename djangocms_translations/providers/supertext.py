@@ -6,7 +6,6 @@ from django.core.urlresolvers import reverse
 
 import requests
 
-from djangocms_transfer.datastructures import ArchivedPlugin
 from djangocms_transfer.forms import _object_version_data_hook
 from djangocms_transfer.utils import get_plugin_class
 
@@ -16,14 +15,12 @@ from ..utils import add_domain, get_translatable_fields
 from .base import BaseTranslationProvider, ProviderException
 
 
-def _get_content(content, plugin):
+def _get_content(field, plugin):
     plugin_class = get_plugin_class(plugin['plugin_type'])
-
-    if hasattr(plugin_class, 'get_djangocms_translation_content'):
-        archived_plugin = ArchivedPlugin(**plugin)
-        instance = archived_plugin.deserialized_instance.object
-        content = plugin_class.get_djangocms_translation_content(instance)
-
+    try:
+        content = plugin_class.get_translation_content(field, plugin['data'])
+    except AttributeError:
+        content = plugin['data'][field]
     return content
 
 
@@ -78,7 +75,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 items = [
                     {
                         'Id': field,
-                        'Content': _get_content(plugin_data[field], plugin),
+                        'Content': _get_content(field, plugin),
                     }
                     for field in fields_by_plugin[plugin_type]
                     if plugin_data.get(field)

@@ -44,7 +44,7 @@ class GetContentTestCase(CMSTestCase):
 
         ArchivedPlugin(**plugin).restore(self.placeholder, 'en')
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         self.assertEquals(result, raw_content)
 
@@ -71,7 +71,7 @@ class GetContentTestCase(CMSTestCase):
         parent.body = raw_content
         parent.save()
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         expected = (
             '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
@@ -106,7 +106,7 @@ class GetContentTestCase(CMSTestCase):
         parent.body = raw_content
         parent.save()
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         expected = (
             '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
@@ -145,7 +145,7 @@ class GetContentTestCase(CMSTestCase):
 
         child1.delete()
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         expected = (
             '<p>Please  to go to link1 '
@@ -155,7 +155,7 @@ class GetContentTestCase(CMSTestCase):
         self.assertEquals(result, expected)
 
     def test_dummy_textfield2_with_children(self):
-        ''' DummyText2Plugin implementation defines get_djangocms_translation_content with a simple str return. '''
+        ''' DummyText2Plugin implementation defines get_translation_content with a simple str return. '''
         raw_content = (
             '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object " '
             'title="Dummy Link Plugin - dummy link object" id="CHILD1ID"></cms-plugin> to go to link1.</p>'
@@ -178,12 +178,12 @@ class GetContentTestCase(CMSTestCase):
         parent.body = raw_content
         parent.save()
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         self.assertEquals(result, 'super dummy overwritten content')
 
     def test_dummy_textfield3_with_children(self):
-        ''' DummyText3Plugin implementation does not define get_djangocms_translation_content. '''
+        ''' DummyText3Plugin implementation does not define get_translation_content. '''
         raw_content = (
             '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object " '
             'title="Dummy Link Plugin - dummy link object" id="CHILD1ID"></cms-plugin> to go to link1.</p>'
@@ -206,6 +206,6 @@ class GetContentTestCase(CMSTestCase):
         parent.body = raw_content
         parent.save()
 
-        result = _get_content(raw_content, plugin)
+        result = _get_content('body', plugin)
 
         self.assertEquals(result, raw_content)

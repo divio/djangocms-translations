@@ -10,14 +10,14 @@ class DummyTextPlugin(CMSPluginBase):
     model = DummyText
 
     @staticmethod
-    def get_djangocms_translation_content(instance):
+    def get_translation_content(field, plugin_data):
         from djangocms_text_ckeditor.utils import plugin_to_tag, _plugin_tags_to_html
 
         def _render_plugin_with_content(obj, match):
             content = obj.label
             return plugin_to_tag(obj, content)
 
-        return _plugin_tags_to_html(instance.body, output_func=_render_plugin_with_content)
+        return _plugin_tags_to_html(plugin_data[field], output_func=_render_plugin_with_content)
 
 
 @plugin_pool.register_plugin
@@ -26,7 +26,7 @@ class DummyText2Plugin(CMSPluginBase):
     model = DummyText
 
     @staticmethod
-    def get_djangocms_translation_content(instance):
+    def get_translation_content(field, plugin_data):
         return 'super dummy overwritten content'
 
 
