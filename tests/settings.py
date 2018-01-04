@@ -44,8 +44,11 @@ HELPER_SETTINGS = {
         ('pt-br', 'Brazilian Portugues'),
         ('ch-de', 'Deutsch'),
     ],
+    'CMS_TEMPLATES': (
+        ('test_fullwidth.html', 'Fullwidth'),
+        ('test_page.html', 'Normal page'),
+    ),
     'SITE_ID': 1,
-
     'DJANGOCMS_TRANSLATIONS_CONF': {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
     },
