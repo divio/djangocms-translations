@@ -131,7 +131,8 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 subplugins = _get_children_content(item['Content'], plugin)
                 subplugins_already_processed.extend(list(subplugins.keys()))
                 for subplugin_id, subplugin_content in subplugins.items():
-                    field = 'label'  # FIXME: Get field via DJANGOCMS_TRANSLATIONS_CONF
+                    subplugin_type = export_content[placeholder][subplugin_id]['plugin_type']
+                    field = settings.DJANGOCMS_TRANSLATIONS_CONF[subplugin_type]['text_field_child_label']
                     export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
 
         # convert back into djangocms-transfer format

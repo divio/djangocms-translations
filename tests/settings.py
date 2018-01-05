@@ -51,6 +51,7 @@ HELPER_SETTINGS = {
     'SITE_ID': 1,
     'DJANGOCMS_TRANSLATIONS_CONF': {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
+        'DummyLinkPlugin': {'text_field_child_label': 'label'},
     },
 }
 

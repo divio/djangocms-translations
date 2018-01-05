@@ -1,5 +1,6 @@
 from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
+from django.conf import settings
 
 from djangocms_text_ckeditor.utils import plugin_to_tag, _plugin_tags_to_html, plugin_tags_to_id_list
 
@@ -14,7 +15,7 @@ class DummyTextPlugin(CMSPluginBase):
     @staticmethod
     def get_translation_content(field, plugin_data):
         def _render_plugin_with_content(obj, match):
-            field = 'label'  # FIXME: Get field via DJANGOCMS_TRANSLATIONS_CONF
+            field = settings.DJANGOCMS_TRANSLATIONS_CONF[obj.plugin_type]['text_field_child_label']
             content = getattr(obj, field)
             return plugin_to_tag(obj, content)
 
