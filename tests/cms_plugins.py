@@ -42,6 +42,10 @@ class DummyText2Plugin(CMSPluginBase):
     def get_translation_content(field, plugin_data):
         return 'super dummy overwritten content', []
 
+    @staticmethod
+    def get_translation_children_content(content, plugin):
+        return {42: 'because I want this to be id=42'}
+
 
 @plugin_pool.register_plugin
 class DummyText3Plugin(CMSPluginBase):
