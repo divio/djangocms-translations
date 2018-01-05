@@ -7,12 +7,7 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
-
-    dependencies = [
-        ('cms', '0019_auto_20180103_1607'),
-    ]
 
     operations = [
         migrations.CreateModel(
