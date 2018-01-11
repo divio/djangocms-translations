@@ -15,19 +15,19 @@ from ..utils import add_domain, get_translatable_fields, get_text_field_child_la
 from .base import BaseTranslationProvider, ProviderException
 
 
-def _get_content(field, raw_plugin):
+def _get_translation_export_content(field, raw_plugin):
     plugin_class = get_plugin_class(raw_plugin['plugin_type'])
     try:
-        result = plugin_class.get_translation_content(field, raw_plugin['data'])
+        result = plugin_class.get_translation_export_content(field, raw_plugin['data'])
     except AttributeError:
         result = (raw_plugin['data'][field], [])
     return result
 
 
-def _get_children_content(enriched_content, plugin):
+def _set_translation_import_content(enriched_content, plugin):
     plugin_class = get_plugin_class(plugin['plugin_type'])
     try:
-        result = plugin_class.get_translation_children_content(enriched_content, plugin['data'])
+        result = plugin_class.set_translation_import_content(enriched_content, plugin['data'])
     except AttributeError:
         result = {}
     return result
@@ -85,7 +85,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
                 items = []
                 for field in fields_by_plugin[plugin_type]:
-                    content, children_included_in_this_content = _get_content(field, raw_plugin)
+                    content, children_included_in_this_content = _get_translation_export_content(field, raw_plugin)
                     subplugins_already_processed.update(children_included_in_this_content)
 
                     if content:
@@ -128,7 +128,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             for item in group['Items']:
                 plugin = export_content[placeholder][plugin_id]
                 plugin['data'][item['Id']] = item['Content']
-                subplugins = _get_children_content(item['Content'], plugin)
+                subplugins = _set_translation_import_content(item['Content'], plugin)
                 subplugins_already_processed.update(list(subplugins.keys()))
                 for subplugin_id, subplugin_content in subplugins.items():
                     field = get_text_field_child_label(export_content[placeholder][subplugin_id]['plugin_type'])

@@ -8,14 +8,14 @@ from django.contrib.auth.models import User
 from djangocms_transfer.exporter import export_page
 
 from djangocms_translations.providers.supertext import (
-    SupertextTranslationProvider, _get_content, _get_children_content,
+    SupertextTranslationProvider, _get_translation_export_content, _set_translation_import_content,
 )
 from djangocms_translations.models import TranslationRequest, TranslationOrder
 
 
-class GetContentTestCase(CMSTestCase):
+class GetTranslationExportContentTestCase(CMSTestCase):
     def setUp(self):
-        super(GetContentTestCase, self).setUp()
+        super(GetTranslationExportContentTestCase, self).setUp()
         self.page = create_page('test page', 'test_page.html', 'en', published=True)
         self.placeholder = self.page.placeholders.get(slot='content')
 
@@ -27,7 +27,7 @@ class GetContentTestCase(CMSTestCase):
         add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body=raw_content)
 
         plugin = self._export_page()[0]['plugins'][0]
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         self.assertEquals(result, raw_content)
         self.assertEquals(children_included_in_this_content, [])
@@ -36,14 +36,13 @@ class GetContentTestCase(CMSTestCase):
         parent = add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         expected = (
             parent_body
@@ -57,16 +56,14 @@ class GetContentTestCase(CMSTestCase):
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         child2 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK2')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1 '
-            'or <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link2.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1 '
+            'or <cms-plugin id="{}"></cms-plugin> to go to link2.</p>'
         ).format(child1.pk, child2.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         expected = (
             parent_body
@@ -81,10 +78,8 @@ class GetContentTestCase(CMSTestCase):
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         child2 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK2')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1 '
-            'or <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link2.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1 '
+            'or <cms-plugin id="{}"></cms-plugin> to go to link2.</p>'
         ).format(child1.pk, child2.pk)
         parent.body = parent_body
         parent.save()
@@ -93,54 +88,51 @@ class GetContentTestCase(CMSTestCase):
 
         child1.delete()
 
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         expected = (
             '<p>Please  to go to link1 '
-            'or <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}">CLICK ON LINK2</cms-plugin> to go to link2.</p>'
+            'or <cms-plugin id="{}">CLICK ON LINK2</cms-plugin> to go to link2.</p>'
         ).format(child2.pk)
         self.assertEquals(result, expected)
         self.assertEquals(children_included_in_this_content, [child2.pk])
 
     def test_dummy_textfield2_with_children(self):
-        ''' DummyText2Plugin implementation defines get_translation_content with a simple str return. '''
+        ''' DummyText2Plugin implementation defines get_translation_export_content with a simple str return. '''
         parent = add_plugin(self.placeholder, 'DummyText2Plugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-pluginid="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         self.assertEquals(result, 'super dummy overwritten content')
         self.assertEquals(children_included_in_this_content, [])
 
     def test_dummy_textfield3_with_children(self):
-        ''' DummyText3Plugin implementation does not define get_translation_content. '''
+        ''' DummyText3Plugin implementation does not define get_translation_export_content. '''
         parent = add_plugin(self.placeholder, 'DummyText3Plugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result, children_included_in_this_content = _get_content('body', plugin)
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
 
         self.assertEquals(result, parent.body)
         self.assertEquals(children_included_in_this_content, [])
 
 
-class GetChildrenContentTestCase(CMSTestCase):
+class SetTranslationImportContentTestCase(CMSTestCase):
     def setUp(self):
-        super(GetChildrenContentTestCase, self).setUp()
+        super(SetTranslationImportContentTestCase, self).setUp()
         self.page = create_page('test page', 'test_page.html', 'en', published=True)
         self.placeholder = self.page.placeholders.get(slot='content')
 
@@ -152,7 +144,7 @@ class GetChildrenContentTestCase(CMSTestCase):
         add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body=raw_content)
 
         plugin = self._export_page()[0]['plugins'][0]
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {})
 
@@ -160,14 +152,13 @@ class GetChildrenContentTestCase(CMSTestCase):
         parent = add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {child1.pk: 'CLICK ON LINK1'})
 
@@ -176,16 +167,14 @@ class GetChildrenContentTestCase(CMSTestCase):
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         child2 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK2')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1 '
-            'or <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link2.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1 '
+            'or <cms-plugin id="{}"></cms-plugin> to go to link2.</p>'
         ).format(child1.pk, child2.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {child1.pk: 'CLICK ON LINK1', child2.pk: 'CLICK ON LINK2'})
 
@@ -194,10 +183,8 @@ class GetChildrenContentTestCase(CMSTestCase):
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         child2 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK2')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1 '
-            'or <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link2.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1 '
+            'or <cms-plugin id="{}"></cms-plugin> to go to link2.</p>'
         ).format(child1.pk, child2.pk)
         parent.body = parent_body
         parent.save()
@@ -206,39 +193,37 @@ class GetChildrenContentTestCase(CMSTestCase):
 
         child1.delete()
 
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {child2.pk: 'CLICK ON LINK2'})
 
     def test_dummy_textfield2_with_children(self):
-        ''' DummyText2Plugin implementation defines get_translation_content with a simple str return. '''
+        ''' DummyText2Plugin implementation defines get_translation_export_content with a simple str return. '''
         parent = add_plugin(self.placeholder, 'DummyText2Plugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {42: 'because I want this to be id=42'})
 
     def test_dummy_textfield3_with_children(self):
-        ''' DummyText3Plugin implementation does not define get_translation_content. '''
+        ''' DummyText3Plugin implementation does not define get_translation_export_content. '''
         parent = add_plugin(self.placeholder, 'DummyText3Plugin', 'en', body='')
         child1 = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=parent, label='CLICK ON LINK1')
         parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-            'title="Dummy Link Plugin - dummy link object" id="{}"></cms-plugin> to go to link1.</p>'
+            '<p>Please <cms-plugin id="{}"></cms-plugin> to go to link1.</p>'
         ).format(child1.pk)
         parent.body = parent_body
         parent.save()
 
         plugin = self._export_page()[0]['plugins'][0]
-        result = _get_children_content(_get_content('body', plugin)[0], plugin)
+        result = _set_translation_import_content(_get_translation_export_content('body', plugin)[0], plugin)
 
         self.assertDictEqual(result, {})
 
@@ -253,8 +238,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
         self.parent = add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body='')
         self.child = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=self.parent, label='contact me')
         self.parent_body = (
-            '<p>Please <cms-plugin alt="Dummy Link Plugin - dummy link object " '
-            'title="Dummy Link Plugin - dummy link object" id="{child_pk}"></cms-plugin> one of these days.</p>'
+            '<p>Please <cms-plugin id="{child_pk}"></cms-plugin> one of these days.</p>'
         ).format(child_pk=self.child.pk)
         self.parent.body = self.parent_body
         self.parent.save()
@@ -281,7 +265,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
                     'Items': [
                         {
                             'Id': 'body',
-                            'Content': _get_content('body', self.export_content[0]['plugins'][0])[0],
+                            'Content': _get_translation_export_content('body', self.export_content[0]['plugins'][0])[0],
                         },
                     ],
                     'GroupId': 'content:{}'.format(self.parent.id)
@@ -321,8 +305,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
         self.assertEquals(
             import_data[0].plugins[0].data['body'],
             (
-                '<p>Por favor <cms-plugin alt="Dummy Link Plugin - dummy link object "'
-                'title="Dummy Link Plugin - dummy link object" id="{}">entre em contato comigo</cms-plugin> '
+                '<p>Por favor <cms-plugin id="{}">entre em contato comigo</cms-plugin> '
                 'algum dia desses.</p>'
             ).format(self.child.pk)
         )

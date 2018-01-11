@@ -17,7 +17,6 @@ HELPER_SETTINGS = {
 
     'INSTALLED_APPS': [
         'tests',
-        'djangocms_text_ckeditor',  # For tests purposes
     ],
     'ALLOWED_HOSTS': [
         'localhost'
