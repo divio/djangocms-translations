@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -13,7 +12,6 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DummyLink',
             fields=[
-                ('cmsplugin_ptr', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, related_name='tests_dummylink', serialize=False, to='cms.CMSPlugin')),
                 ('label', models.TextField()),
             ],
             options={
@@ -24,7 +22,6 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DummyText',
             fields=[
-                ('cmsplugin_ptr', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, related_name='tests_dummytext', serialize=False, to='cms.CMSPlugin')),
                 ('body', models.TextField()),
             ],
             options={

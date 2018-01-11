@@ -102,3 +102,8 @@ def get_translatable_fields(plugin_type):
         fields = get_local_fields(model)
     excluded = conf.get('excluded_fields', [])
     return set(fields).difference(set(excluded))
+
+
+@lru_cache(maxsize=None)
+def get_text_field_child_label(plugin_type):
+    return settings.DJANGOCMS_TRANSLATIONS_CONF[plugin_type]['text_field_child_label']
