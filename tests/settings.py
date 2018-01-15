@@ -2,8 +2,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function, division
 import os
+import sys
 
 import dj_database_url
+
+
+class DisableMigrations(dict):
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        from distutils.version import LooseVersion
+        import django
+        DJANGO_1_9 = LooseVersion(django.get_version()) < LooseVersion('1.10')
+        if DJANGO_1_9:
+            return 'notmigrations'
+        else:
+            return None
+
 
 HELPER_SETTINGS = {
     'DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER'),
@@ -42,8 +58,19 @@ HELPER_SETTINGS = {
         ('pt-br', 'Brazilian Portugues'),
         ('ch-de', 'Deutsch'),
     ],
+    'CMS_TEMPLATES': (
+        ('test_fullwidth.html', 'Fullwidth'),
+        ('test_page.html', 'Normal page'),
+    ),
     'SITE_ID': 1,
+    'DJANGOCMS_TRANSLATIONS_CONF': {
+        'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
+        'DummyLinkPlugin': {'text_field_child_label': 'label'},
+    },
 }
+if 'test' in sys.argv:
+    HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
+    HELPER_SETTINGS['INSTALLED_APPS'].append('tests')
 
 
 def run():

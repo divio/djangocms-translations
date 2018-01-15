@@ -7,11 +7,30 @@ from django.core.urlresolvers import reverse
 import requests
 
 from djangocms_transfer.forms import _object_version_data_hook
+from djangocms_transfer.utils import get_plugin_class
 
 from .. import __version__ as djangocms_translations_version
-from ..utils import add_domain, get_translatable_fields
+from ..utils import add_domain, get_translatable_fields, get_text_field_child_label
 
 from .base import BaseTranslationProvider, ProviderException
+
+
+def _get_translation_export_content(field, raw_plugin):
+    plugin_class = get_plugin_class(raw_plugin['plugin_type'])
+    try:
+        result = plugin_class.get_translation_export_content(field, raw_plugin['data'])
+    except AttributeError:
+        result = (raw_plugin['data'][field], [])
+    return result
+
+
+def _set_translation_import_content(enriched_content, plugin):
+    plugin_class = get_plugin_class(plugin['plugin_type'])
+    try:
+        result = plugin_class.set_translation_import_content(enriched_content, plugin['data'])
+    except AttributeError:
+        result = {}
+    return result
 
 
 class SupertextException(ProviderException):
@@ -53,25 +72,31 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         fields_by_plugin = {}
 
         for placeholder in json.loads(self.request.export_content):
-            for plugin in placeholder['plugins']:
-                plugin_type = plugin['plugin_type']
+            subplugins_already_processed = set()
+
+            for raw_plugin in placeholder['plugins']:
+                plugin_type = raw_plugin['plugin_type']
+
+                if raw_plugin['pk'] in subplugins_already_processed:
+                    continue
 
                 if plugin_type not in fields_by_plugin:
                     fields_by_plugin[plugin_type] = get_translatable_fields(plugin_type)
 
-                plugin_data = plugin['data']
-                items = [
-                    {
-                        'Id': field,
-                        'Content': plugin_data[field],
-                    }
-                    for field in fields_by_plugin[plugin_type]
-                    if plugin_data.get(field)
-                ]
+                items = []
+                for field in fields_by_plugin[plugin_type]:
+                    content, children_included_in_this_content = _get_translation_export_content(field, raw_plugin)
+                    subplugins_already_processed.update(children_included_in_this_content)
+
+                    if content:
+                        items.append({
+                            'Id': field,
+                            'Content': content,
+                        })
 
                 if items:
                     groups.append({
-                        'GroupId': '{}:{}'.format(placeholder['placeholder'], plugin['pk']),
+                        'GroupId': '{}:{}'.format(placeholder['placeholder'], raw_plugin['pk']),
                         'Items': items
                     })
 
@@ -82,6 +107,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         request = self.request
         export_content = json.loads(request.export_content)
         import_content = json.loads(request.order.response_content)
+        subplugins_already_processed = set()
 
         # convert it to a format which is easier to work with
         export_content = {
@@ -96,8 +122,17 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             placeholder, plugin_id = group['GroupId'].rsplit(':', 1)
             plugin_id = int(plugin_id)
 
+            if plugin_id in subplugins_already_processed:
+                continue
+
             for item in group['Items']:
-                export_content[placeholder][plugin_id]['data'][item['Id']] = item['Content']
+                plugin = export_content[placeholder][plugin_id]
+                plugin['data'][item['Id']] = item['Content']
+                subplugins = _set_translation_import_content(item['Content'], plugin)
+                subplugins_already_processed.update(list(subplugins.keys()))
+                for subplugin_id, subplugin_content in subplugins.items():
+                    field = get_text_field_child_label(export_content[placeholder][subplugin_id]['plugin_type'])
+                    export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
 
         # convert back into djangocms-transfer format
         data = json.dumps([{
