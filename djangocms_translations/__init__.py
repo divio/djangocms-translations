@@ -1,3 +1,3 @@
-__version__ = '0.0.1a22'
+__version__ = '0.0.1a23'
 
 default_app_config = 'djangocms_translations.apps.DjangocmsTranslationsConfig'
