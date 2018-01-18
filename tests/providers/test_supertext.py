@@ -129,6 +129,24 @@ class GetTranslationExportContentTestCase(CMSTestCase):
         self.assertEquals(result, parent.body)
         self.assertEquals(children_included_in_this_content, [])
 
+    def test_textfield_with_children_non_translatable(self):
+        parent = add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body='')
+        child1 = add_plugin(self.placeholder, 'DummySpacerPlugin', 'en', target=parent)
+        parent_body = (
+            '<p>This is cool <cms-plugin id="{}"></cms-plugin> this is nice.</p>'
+        ).format(child1.pk)
+        parent.body = parent_body
+        parent.save()
+
+        plugin = self._export_page()[0]['plugins'][0]
+        result, children_included_in_this_content = _get_translation_export_content('body', plugin)
+
+        expected = (
+            parent_body
+        )
+        self.assertEquals(result, expected)
+        self.assertEquals(children_included_in_this_content, [child1.pk])
+
 
 class SetTranslationImportContentTestCase(CMSTestCase):
     def setUp(self):
@@ -237,9 +255,11 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
 
         self.parent = add_plugin(self.placeholder, 'DummyTextPlugin', 'en', body='')
         self.child = add_plugin(self.placeholder, 'DummyLinkPlugin', 'en', target=self.parent, label='contact me')
+        self.child2 = add_plugin(self.placeholder, 'DummySpacerPlugin', 'en', target=self.parent)
         self.parent_body = (
-            '<p>Please <cms-plugin id="{child_pk}"></cms-plugin> one of these days.</p>'
-        ).format(child_pk=self.child.pk)
+            '<p>Please <cms-plugin id="{child_pk}"></cms-plugin> '
+            '<cms-plugin id="{child2_pk}"></cms-plugin> one of these days.</p>'
+        ).format(child_pk=self.child.pk, child2_pk=self.child2.pk)
         self.parent.body = self.parent_body
         self.parent.save()
 
@@ -301,12 +321,19 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
         import_data = self.provider.get_import_data()
 
         self.assertEquals(len(import_data), 1)
-        self.assertEquals(len(import_data[0].plugins), 2)  # Decompress enriched parent to be (parent, child)
+        self.assertEquals(len(import_data[0].plugins), 3)  # Decompress enriched parent to have parent and children.
+
+        self.assertEquals(import_data[0].plugins[0].plugin_type, 'DummyTextPlugin')
         self.assertEquals(
             import_data[0].plugins[0].data['body'],
             (
                 '<p>Por favor <cms-plugin id="{}">entre em contato comigo</cms-plugin> '
-                'algum dia desses.</p>'
-            ).format(self.child.pk)
+                '<cms-plugin id="{}"></cms-plugin> algum dia desses.</p>'
+            ).format(self.child.pk, self.child2.pk)
         )
+
+        self.assertEquals(import_data[0].plugins[1].plugin_type, 'DummyLinkPlugin')
         self.assertEquals(import_data[0].plugins[1].data['label'], 'entre em contato comigo')
+
+        self.assertEquals(import_data[0].plugins[2].plugin_type, 'DummySpacerPlugin')
+        self.assertEquals(import_data[0].plugins[2].data, {})
