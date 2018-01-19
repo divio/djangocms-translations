@@ -106,4 +106,4 @@ def get_translatable_fields(plugin_type):
 
 @lru_cache(maxsize=None)
 def get_text_field_child_label(plugin_type):
-    return settings.DJANGOCMS_TRANSLATIONS_CONF[plugin_type]['text_field_child_label']
+    return settings.DJANGOCMS_TRANSLATIONS_CONF.get(plugin_type, {}).get('text_field_child_label')

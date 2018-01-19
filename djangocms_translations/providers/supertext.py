@@ -132,13 +132,14 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 subplugins_already_processed.update(list(subplugins.keys()))
                 for subplugin_id, subplugin_content in subplugins.items():
                     field = get_text_field_child_label(export_content[placeholder][subplugin_id]['plugin_type'])
-                    export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
+                    if field:
+                        export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
 
         # convert back into djangocms-transfer format
         data = json.dumps([{
-            'placeholder': placeholder,
+            'placeholder': p,
             'plugins': list(plugins.values()),
-        } for placeholder, plugins in export_content.items()])
+        } for p, plugins in export_content.items()])
         return json.loads(data, object_hook=_object_version_data_hook)
 
     def get_quote(self):

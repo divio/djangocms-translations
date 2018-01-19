@@ -5,7 +5,7 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from cms.utils.plugins import downcast_plugins
 
-from tests.models import DummyText, DummyLink
+from tests.models import DummyText, DummyLink, DummySpacer
 
 from djangocms_translations.utils import get_text_field_child_label
 
@@ -24,15 +24,17 @@ class DummyTextPlugin(CMSPluginBase):
         for subplugin in CMSPlugin.objects.filter(id__in=regex.findall(content)):
             subplugins_within_this_content.append(subplugin.id)
             subplugin = list(downcast_plugins([subplugin]))[0]
-            subplugin_content = getattr(subplugin, get_text_field_child_label(subplugin.plugin_type))
 
-            content = re.sub(
-                r'<cms-plugin id="{}"></cms-plugin>'.format(subplugin.id),
-                r'<cms-plugin id="{}">{}</cms-plugin>'.format(subplugin.id, subplugin_content),
-                content
-            )
+            field = get_text_field_child_label(subplugin.plugin_type)
+            if field:
+                to = r'<cms-plugin id="{}">{}</cms-plugin>'.format(subplugin.id, getattr(subplugin, field))
+                content = re.sub(r'<cms-plugin id="{}"></cms-plugin>'.format(subplugin.id), to, content)
 
-        content = re.sub(r'<cms-plugin id="(\d+)"></cms-plugin>', '', content)
+        empty_plugin_ids = re.findall(r'<cms-plugin id="(\d+)"></cms-plugin>', content)
+        for empty_plugin_id in empty_plugin_ids:
+            if int(empty_plugin_id) not in subplugins_within_this_content:
+                content = content.replace(r'<cms-plugin id="{}"></cms-plugin>'.format(empty_plugin_id), '')
+
         return (content, subplugins_within_this_content)
 
     @staticmethod
@@ -71,3 +73,9 @@ class DummyText3Plugin(CMSPluginBase):
 class DummyLinkPlugin(CMSPluginBase):
     render_plugin = False
     model = DummyLink
+
+
+@plugin_pool.register_plugin
+class DummySpacerPlugin(CMSPluginBase):
+    render_plugin = False
+    model = DummySpacer
