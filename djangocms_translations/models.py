@@ -86,7 +86,7 @@ class TranslationRequest(models.Model):
 
     def export_content_from_cms(self):
         export_content = []
-        for translation_request_item in self.translation_request_items:
+        for translation_request_item in self.translation_request_items.all():
             page_export_content = get_page_export_data(translation_request_item.source_cms_page, self.source_language)
             for x in page_export_content:
                 x['translation_request_item_pk'] = translation_request_item.pk
@@ -185,7 +185,7 @@ class TranslationRequest(models.Model):
             pl.slot: pl.get_plugins()
             for pl in self.archived_placeholders.all()
         }
-        for translation_request_item in self.translation_request_items:
+        for translation_request_item in self.translation_request_items.all():
             page_placeholders = (
                 translation_request_item
                 .target_cms_page
@@ -241,7 +241,7 @@ class TranslationRequest(models.Model):
 
 
 class TranslationRequestItem(models.Model):
-    translation_request = models.ForeignKey(TranslationRequest, related_name='items')
+    translation_request = models.ForeignKey(TranslationRequest, related_name='translation_request_items')
     source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
     target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
 
@@ -259,9 +259,6 @@ class TranslationRequestItem(models.Model):
                 'target_cms_page':
                 _('Invalid choice. Page must contain {} translation').format(self.translation_request.target_language)
             })
-
-        if self.source_cms_page == self.target_cms_page:
-            raise ValidationError(_('Source and target pages must be different'))
 
         return super(TranslationRequestItem, self).clean()
 

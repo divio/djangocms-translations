@@ -1,4 +1,5 @@
 from django import forms
+from cms.forms.fields import PageSelectFormField
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.safestring import mark_safe
 
@@ -6,6 +7,9 @@ from . import models
 
 
 class CreateTranslationForm(forms.ModelForm):
+    source_cms_page = PageSelectFormField()
+    target_cms_page = PageSelectFormField()
+
     class Meta:
         model = models.TranslationRequest
         fields = [
@@ -18,11 +22,39 @@ class CreateTranslationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
+        self.translation_request_item = None
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
+
+    def clean(self, *args, **kwargs):
+        self.translation_request_data = self.cleaned_data.copy()
+        self.translation_request_item_data = {
+            'source_cms_page': self.translation_request_data.pop('source_cms_page', None),
+            'target_cms_page': self.translation_request_data.pop('target_cms_page', None),
+        }
+
+        translation_request = models.TranslationRequest(**self.translation_request_data)
+        translation_request.clean()
+
+        self.translation_request_item_data['translation_request'] = translation_request
+        translation_request_item = models.TranslationRequestItem(**self.translation_request_item_data)
+        translation_request_item.clean()
+
+        return super(CreateTranslationForm, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         self.instance.user = self.user
-        return super(CreateTranslationForm, self).save(*args, **kwargs)
+        result = super(CreateTranslationForm, self).save(*args, **kwargs)
+
+
+
+
+
+
+
+
+
+        # FIXME: create translation_request_item
+        return result
 
 
 class QuoteInput(RadioChoiceInput):
