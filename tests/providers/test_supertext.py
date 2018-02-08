@@ -288,7 +288,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
                             'Content': _get_translation_export_content('body', self.export_content[0]['plugins'][0])[0],
                         },
                     ],
-                    'GroupId': 'content:{}'.format(self.parent.id)
+                    'GroupId': '{}:content:{}'.format(self.page.pk, self.parent.id)
                 },
             ],
             'ContentType': 'text/html',

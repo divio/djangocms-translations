@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 import json
 import logging
 
-import six
-
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
@@ -35,12 +33,6 @@ def _get_placeholder_slot(archived_placeholder):
     return archived_placeholder.slot
 
 
-def _get_language_labels(languages):
-    language_choices_dict = dict(settings.LANGUAGES)
-    language_labels = [language_choices_dict[lang] for lang in languages]
-    return '"{}".'.format('", "'.join(map(six.text_type, language_labels)))
-
-
 class TranslationRequest(models.Model):
     STATES = Choices(
         ('DRAFT', 'draft', _('Draft')),
@@ -65,9 +57,7 @@ class TranslationRequest(models.Model):
     date_submitted = models.DateTimeField(blank=True, null=True)
     date_received = models.DateTimeField(blank=True, null=True)
     date_imported = models.DateTimeField(blank=True, null=True)
-    source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
     source_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
-    target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
     target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
     provider_options = JSONField(default={}, blank=True)
@@ -87,8 +77,7 @@ class TranslationRequest(models.Model):
     _provider = None
 
     def set_status(self, status, commit=True):
-        if status not in self.STATES.values:
-            raise RuntimeError('Invalid status')
+        assert status in self.STATES.values, 'Invalid status'
         self.state = status
 
         if commit:
@@ -96,15 +85,18 @@ class TranslationRequest(models.Model):
         return not status == self.STATES.IMPORT_FAILED
 
     def export_content_from_cms(self):
-        if not self.source_cms_page and not self.source_language:
-            raise RuntimeError('Set a cms page and language for export')
+        export_content = []
+        for translation_request_item in self.translation_request_items:
+            page_export_content = get_page_export_data(translation_request_item.source_cms_page, self.source_language)
+            for x in page_export_content:
+                x['translation_request_item_pk'] = translation_request_item.pk
+            export_content.extend(page_export_content)
 
-        export_data = get_page_export_data(self.source_cms_page, self.source_language)
-        self.export_content = json.dumps(export_data, cls=DjangoJSONEncoder)
+        self.export_content = json.dumps(export_content, cls=DjangoJSONEncoder)
         self.save(update_fields=('export_content',))
         self.set_status(self.STATES.OPEN)
 
-    def get_quote_from_provider(self):
+    def get_quote_from_provider(self):  # FIXME: rename to get_quotes_from_provider (plural) ?
         self.set_status(self.STATES.PENDING_QUOTE)
 
         provider_quote = self.provider.get_quote()
@@ -119,7 +111,7 @@ class TranslationRequest(models.Model):
             description = option['Description']
 
             for delivery_option in option['DeliveryOptions']:
-                quote = self.add_quote(
+                quote = self.quotes.create(
                     provider_options={
                         'OrderTypeId': order_type_id,
                         'DeliveryId': delivery_option['DeliveryId'],
@@ -135,19 +127,13 @@ class TranslationRequest(models.Model):
 
         self.set_status(self.STATES.PENDING_APPROVAL)
 
-        return quotes
-
-    def add_quote(self, **kwargs):
-        return TranslationQuote.objects.create(request=self, **kwargs)
-
     def submit_request(self):
         response = self.provider.send_request()
         self.set_status(self.STATES.IN_TRANSLATION)
         return response
 
     def check_status(self):
-        if not hasattr(self, 'order'):
-            return RuntimeError('Cannot check status if there is no order.')
+        assert hasattr(self, 'order'), 'Cannot check status if there is no order.'
         status = self.provider.check_status()
         self.order.state = status['Status'].lower()
         # TODO: which states are available?
@@ -160,20 +146,27 @@ class TranslationRequest(models.Model):
         self.order.save(update_fields=('response_content',))
 
         try:
-            placeholders = self.provider.get_import_data()
+            import_data = self.provider.get_import_data()
         except ValueError:
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
-        try:
-            import_plugins_to_page(
-                placeholders=placeholders,
-                page=self.target_cms_page,
-                language=self.target_language
-            )
-        except (IntegrityError, ObjectDoesNotExist):
-            self._set_import_archive()
-            logger.exception("Failed to import plugins from {}".format(self.provider_backend))
+        # FIXME: placeholders/get_import_data() has to be adjusted to deal with translationRequest instead of items.
+        import_error = False
+        for translation_request_item, placeholders in import_data.items():
+            try:
+                import_plugins_to_page(
+                    placeholders=placeholders,
+                    page=translation_request_item.target_cms_page,
+                    language=self.target_language
+                )
+            except (IntegrityError, ObjectDoesNotExist):
+                self._set_import_archive()
+                logger.exception("Failed to import plugins from {}".format(self.provider_backend))
+                import_error = True
+
+        if import_error:
+            # FIXME: this or all-or-nothing?
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         self.set_status(self.STATES.IMPORTED, commit=False)
@@ -192,20 +185,21 @@ class TranslationRequest(models.Model):
             pl.slot: pl.get_plugins()
             for pl in self.archived_placeholders.all()
         }
-        page_placeholders = (
-            self
-            .target_cms_page
-            .placeholders
-            .filter(slot__in=plugins_by_placeholder)
-        )
-
-        for placeholder in page_placeholders:
-            plugins = plugins_by_placeholder[placeholder.slot]
-            copy_plugins_to_placeholder(
-                plugins=plugins,
-                placeholder=placeholder,
-                language=self.target_language,
+        for translation_request_item in self.translation_request_items:
+            page_placeholders = (
+                translation_request_item
+                .target_cms_page
+                .placeholders
+                .filter(slot__in=plugins_by_placeholder)
             )
+
+            for placeholder in page_placeholders:
+                plugins = plugins_by_placeholder[placeholder.slot]
+                copy_plugins_to_placeholder(
+                    plugins=plugins,
+                    placeholder=placeholder,
+                    language=self.target_language,
+                )
 
         self.set_status(self.STATES.IMPORTED, commit=False)
         self.date_imported = timezone.now()
@@ -213,48 +207,63 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
-        page_placeholders = self.source_cms_page.get_declared_placeholders()
-        plugins_by_placeholder = {
-            pl.slot: pl.plugins
-            for pl in self.provider.get_import_data() if pl.plugins
-        }
+        for translation_request_item, placeholders in self.provider.get_import_data():
+            page_placeholders = translation_request_item.source_cms_page.get_declared_placeholders()
 
-        for pos, placeholder in enumerate(page_placeholders, start=1):
-            if placeholder.slot not in plugins_by_placeholder:
-                continue
+            plugins_by_placeholder = {
+                pl.slot: pl.plugins
+                for pl in placeholders if pl.plugins
+            }
 
-            plugins = plugins_by_placeholder[placeholder.slot]
-            bound_plugins = (plugin for plugin in plugins if plugin.data)
-            ar_placeholder = (
-                self
-                .archived_placeholders
-                .create(slot=placeholder.slot, position=pos)
-            )
+            for pos, placeholder in enumerate(page_placeholders, start=1):
+                if placeholder.slot not in plugins_by_placeholder:
+                    continue
 
-            try:
-                ar_placeholder._import_plugins(bound_plugins)
-            except (IntegrityError, ObjectDoesNotExist):
-                return False
+                plugins = plugins_by_placeholder[placeholder.slot]
+                bound_plugins = (plugin for plugin in plugins if plugin.data)
+                ar_placeholder = (
+                    self
+                    .archived_placeholders
+                    .create(slot=placeholder.slot, position=pos)
+                )
+
+                try:
+                    ar_placeholder._import_plugins(bound_plugins)
+                except (IntegrityError, ObjectDoesNotExist):
+                    # return False
+                    raise  # FIXME: what about fail loudly? The old 'return False' wasn't being used at all.
+
+    def clean(self, exclude=None):
+        if self.source_language == self.target_language:
+            raise ValidationError(_('Source and target languages must be different'))
+
+        return super(TranslationRequest, self).clean()
+
+
+class TranslationRequestItem(models.Model):
+    translation_request = models.ForeignKey(TranslationRequest, related_name='items')
+    source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
+    target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
 
     def clean(self, exclude=None):
         page_languages = self.source_cms_page.get_languages()
-        if self.source_language not in page_languages:
+        if self.translation_request.source_language not in page_languages:
             raise ValidationError({
-                'source_language':
-                _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
+                'source_cms_page':
+                _('Invalid choice. Page must contain {} translation').format(self.translation_request.source_language)
             })
 
         page_languages = self.target_cms_page.get_languages()
-        if self.target_language not in page_languages:
+        if self.translation_request.target_language not in page_languages:
             raise ValidationError({
-                'target_language':
-                _('Invalid choice. Valid choices are {}').format(_get_language_labels(page_languages))
+                'target_cms_page':
+                _('Invalid choice. Page must contain {} translation').format(self.translation_request.target_language)
             })
 
-        if (self.source_cms_page, self.source_language) == (self.target_cms_page, self.target_language):
-            raise ValidationError(_('One can not translate the same page to the same language.'))
+        if self.source_cms_page == self.target_cms_page:
+            raise ValidationError(_('Source and target pages must be different'))
 
-        return super(TranslationRequest, self).clean()
+        return super(TranslationRequestItem, self).clean()
 
 
 class TranslationQuote(models.Model):

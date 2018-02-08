@@ -96,7 +96,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
                 if items:
                     groups.append({
-                        'GroupId': '{}:{}'.format(placeholder['placeholder'], raw_plugin['pk']),
+                        'GroupId': '{}:{}:{}'.format(
+                            placeholder['page_pk'], placeholder['placeholder'], raw_plugin['pk']
+                        ),
                         'Items': items
                     })
 
@@ -119,7 +121,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         }
 
         for group in import_content['Groups']:
-            placeholder, plugin_id = group['GroupId'].rsplit(':', 1)
+            translation_request_item_id, placeholder, plugin_id = group['GroupId'].split(':')
             plugin_id = int(plugin_id)
 
             if plugin_id in subplugins_already_processed:
@@ -134,6 +136,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                     field = get_text_field_child_label(export_content[placeholder][subplugin_id]['plugin_type'])
                     if field:
                         export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
+
+        # translation_request_item = self.translation_request_items.get(id=translation_request_item_id)  # FIXME: performance
+        import ipdb
+        ipdb.set_trace()
 
         # convert back into djangocms-transfer format
         data = json.dumps([{
@@ -164,7 +170,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         data.update({
             'OrderName': 'djangocms-translations order #{}'.format(request.pk),
             'ReferenceData': request.pk,  # TODO: we should add a secret token here and then recheck when importing.
-            'SystemName': request.source_cms_page.site.name,
+            # 'SystemName': request.source_cms_page.site.name,  # FIXME: Do we need this?
             'ComponentName': 'djangocms-translations',
             'ComponentVersion': djangocms_translations_version,
             'CallbackUrl': callback_url,
