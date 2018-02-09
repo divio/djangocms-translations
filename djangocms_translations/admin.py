@@ -27,6 +27,34 @@ class AllReadOnlyFieldsMixin(object):
             if not isinstance(field, ManyToOneRel)
         ] + list(self.readonly_fields)
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
+    model = models.TranslationRequestItem
+    extra = 0
+
+    readonly_fields = (
+        'pretty_source_cms_page',
+        'pretty_target_cms_page',
+    )
+    fields = readonly_fields
+
+    def _pretty_page_display(self, page):
+        return mark_safe('<a href="{}" target="_parent">{}</a>'.format(page.get_absolute_url(), page))
+
+    def pretty_source_cms_page(self, obj):
+        return self._pretty_page_display(obj.source_cms_page)
+    pretty_source_cms_page.short_description = _('Source CMS Page')
+
+    def pretty_target_cms_page(self, obj):
+        return self._pretty_page_display(obj.target_cms_page)
+    pretty_target_cms_page.short_description = _('Target CMS Page')
+
 
 class TranslationQuoteInline(AllReadOnlyFieldsMixin, admin.TabularInline):
     model = models.TranslationQuote
@@ -70,6 +98,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
 @admin.register(models.TranslationRequest)
 class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     inlines = [
+        TranslationRequestItemInline,
         TranslationQuoteInline,
         TranslationOrderInline,
     ]
@@ -77,7 +106,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     list_filter = ('state',)
     list_display = (
         'date_created',
-        # 'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'status',
@@ -93,7 +121,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             'date_received',
             'date_imported',
         ),
-        # 'pretty_source_cms_pages',
         (
             'pretty_source_language',
             'pretty_target_language',
@@ -110,7 +137,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'date_submitted',
         'date_received',
         'date_imported',
-        # 'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'pretty_provider_options',
@@ -118,16 +144,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'pretty_request_content',
         'selected_quote',
     )
-
-    # def pretty_source_cms_pages(self, obj):
-    #     source = obj.source_cms_page
-    #     target = obj.target_cms_page
-
-    #     return mark_safe(
-    #         '<a href="{}" target="_parent">{}</a> --> <a href="{}" target="_parent">{}</a>'
-    #         .format(source.get_absolute_url(), source, target.get_absolute_url(), target)
-    #     )
-    # pretty_source_cms_pages.short_description = _('CMS Pages (from --> to)')
 
     def _get_language_info(self, lang_code):
         return get_language_info(lang_code)['name']

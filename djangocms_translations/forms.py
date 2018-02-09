@@ -22,17 +22,16 @@ class CreateTranslationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        self.translation_request_item = None
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
 
     def clean(self, *args, **kwargs):
-        self.translation_request_data = self.cleaned_data.copy()
+        translation_request_data = self.cleaned_data.copy()
         self.translation_request_item_data = {
-            'source_cms_page': self.translation_request_data.pop('source_cms_page', None),
-            'target_cms_page': self.translation_request_data.pop('target_cms_page', None),
+            'source_cms_page': translation_request_data.pop('source_cms_page', None),
+            'target_cms_page': translation_request_data.pop('target_cms_page', None),
         }
 
-        translation_request = models.TranslationRequest(**self.translation_request_data)
+        translation_request = models.TranslationRequest(**translation_request_data)
         translation_request.clean()
 
         self.translation_request_item_data['translation_request'] = translation_request
@@ -43,18 +42,12 @@ class CreateTranslationForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         self.instance.user = self.user
-        result = super(CreateTranslationForm, self).save(*args, **kwargs)
+        translation_request = super(CreateTranslationForm, self).save(*args, **kwargs)
 
+        del self.translation_request_item_data['translation_request']
+        translation_request.translation_request_items.create(**self.translation_request_item_data)
 
-
-
-
-
-
-
-
-        # FIXME: create translation_request_item
-        return result
+        return translation_request
 
 
 class QuoteInput(RadioChoiceInput):
