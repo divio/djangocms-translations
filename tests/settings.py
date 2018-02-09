@@ -59,10 +59,6 @@ HELPER_SETTINGS = {
         ('pt-br', 'Brazilian Portugues'),
         ('de', 'Deutsch'),
     ],
-    # 'CMS_TEMPLATES': (
-    #     ('test_fullwidth.html', 'Fullwidth'),
-    #     ('test_page.html', 'Normal page'),
-    # ),
     'SITE_ID': 1,
     'DJANGOCMS_TRANSLATIONS_CONF': {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
@@ -73,6 +69,10 @@ HELPER_SETTINGS = {
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
     HELPER_SETTINGS['INSTALLED_APPS'].append('tests')
+    HELPER_SETTINGS['CMS_TEMPLATES'] = (
+        ('test_fullwidth.html', 'Fullwidth'),
+        ('test_page.html', 'Normal page'),
+    )
 
 
 def run():
