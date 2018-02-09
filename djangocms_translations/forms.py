@@ -6,8 +6,8 @@ from django.utils.safestring import mark_safe
 from cms.forms.fields import PageSelectFormField
 from cms.models import Page
 
+from . import conf
 from . import models
-
 
 class CreateTranslationForm(forms.ModelForm):
     source_cms_page = PageSelectFormField()
@@ -75,6 +75,13 @@ class BulkCreateTranslationForm(forms.ModelForm):
         translation_request_data = self.cleaned_data.copy()
         pages = translation_request_data.pop('pages')
         translation_request = models.TranslationRequest(**translation_request_data)
+
+        if len(pages) > conf.TRANSLATIONS_MAX_PAGES_PER_BULK:
+            message = (
+                'Bulk requests may contain up to {} pages (you selected {})'
+                .format(conf.TRANSLATIONS_MAX_PAGES_PER_BULK, len(pages))
+            )
+            raise ValidationError({'pages': message})
 
         for page in pages:
             translation_request_item = models.TranslationRequestItem(
