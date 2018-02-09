@@ -32,6 +32,7 @@ HELPER_SETTINGS = {
     )},
 
     'INSTALLED_APPS': [
+        'djangocms_text_ckeditor'
     ],
     'ALLOWED_HOSTS': [
         'localhost'
@@ -47,7 +48,7 @@ HELPER_SETTINGS = {
                 'name': 'Brazilian Portugues',
             },
             {
-                'code': 'ch-de',
+                'code': 'de',
                 'name': 'Deutsch',
             },
         ],
@@ -56,7 +57,7 @@ HELPER_SETTINGS = {
     'LANGUAGES': [
         ('en', 'English'),
         ('pt-br', 'Brazilian Portugues'),
-        ('ch-de', 'Deutsch'),
+        ('de', 'Deutsch'),
     ],
     # 'CMS_TEMPLATES': (
     #     ('test_fullwidth.html', 'Fullwidth'),

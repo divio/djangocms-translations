@@ -117,6 +117,25 @@ class CreateTranslationRequestView(CreateView):
         return response
 
 
+class BulkCreateTranslationRequestView(CreateView):
+    template_name = 'djangocms_translations/create_request.html'
+    form_class = forms.BulkCreateTranslationForm
+
+    def get_success_url(self):
+        return reverse('admin:choose-translation-quote', kwargs={'pk': self.object.pk})
+
+    def get_form_kwargs(self):
+        form_kwargs = super(BulkCreateTranslationRequestView, self).get_form_kwargs()
+        form_kwargs['user'] = self.request.user
+        return form_kwargs
+
+    def form_valid(self, form):
+        response = super(BulkCreateTranslationRequestView, self).form_valid(form)
+        self.object.export_content_from_cms()
+        self.object.get_quote_from_provider()
+        return response
+
+
 class ChooseTranslationQuoteView(UpdateView):
     template_name = 'djangocms_translations/choose_quote.html'
     form_class = forms.ChooseTranslationQuoteForm

@@ -188,6 +188,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     def get_urls(self):
         return [
             url(
+                r'bulk-add/$',
+                views.BulkCreateTranslationRequestView.as_view(),
+                name='bulk-create-translation-request',
+            ),
+            url(
                 r'add/$',
                 views.CreateTranslationRequestView.as_view(),
                 name='create-translation-request',

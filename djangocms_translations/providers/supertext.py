@@ -97,7 +97,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                 if items:
                     groups.append({
                         'GroupId': '{}:{}:{}'.format(
-                            placeholder['page_pk'], placeholder['placeholder'], raw_plugin['pk']
+                            placeholder['translation_request_item_pk'], placeholder['placeholder'], raw_plugin['pk']
                         ),
                         'Items': items
                     })

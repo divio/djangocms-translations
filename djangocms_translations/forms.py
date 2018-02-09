@@ -1,7 +1,10 @@
+from django.conf import settings
 from django import forms
-from cms.forms.fields import PageSelectFormField
+from django.core.exceptions import ValidationError
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.safestring import mark_safe
+from cms.forms.fields import PageSelectFormField
+from cms.models import Page
 
 from . import models
 
@@ -25,20 +28,19 @@ class CreateTranslationForm(forms.ModelForm):
         super(CreateTranslationForm, self).__init__(*args, **kwargs)
 
     def clean(self, *args, **kwargs):
+        super(CreateTranslationForm, self).clean(*args, **kwargs)
         translation_request_data = self.cleaned_data.copy()
         self.translation_request_item_data = {
             'source_cms_page': translation_request_data.pop('source_cms_page', None),
             'target_cms_page': translation_request_data.pop('target_cms_page', None),
         }
-
         translation_request = models.TranslationRequest(**translation_request_data)
-        translation_request.clean()
 
         self.translation_request_item_data['translation_request'] = translation_request
         translation_request_item = models.TranslationRequestItem(**self.translation_request_item_data)
         translation_request_item.clean()
 
-        return super(CreateTranslationForm, self).clean(*args, **kwargs)
+        return self.cleaned_data
 
     def save(self, *args, **kwargs):
         self.instance.user = self.user
@@ -46,6 +48,55 @@ class CreateTranslationForm(forms.ModelForm):
 
         del self.translation_request_item_data['translation_request']
         translation_request.translation_request_items.create(**self.translation_request_item_data)
+
+        return translation_request
+
+
+class BulkCreateTranslationForm(forms.ModelForm):
+    # FIXME: <CMS3.5 compat?
+    # FIXME: Only draft/non draft?
+    pages = forms.ModelMultipleChoiceField(Page.objects.drafts().filter(node__site=settings.SITE_ID))
+
+    class Meta:
+        model = models.TranslationRequest
+        fields = [
+            'pages',
+            'source_language',
+            'target_language',
+            'provider_backend',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(BulkCreateTranslationForm, self).__init__(*args, **kwargs)
+
+    def clean(self, *args, **kwargs):
+        super(BulkCreateTranslationForm, self).clean(*args, **kwargs)
+        translation_request_data = self.cleaned_data.copy()
+        pages = translation_request_data.pop('pages')
+        translation_request = models.TranslationRequest(**translation_request_data)
+
+        for page in pages:
+            translation_request_item = models.TranslationRequestItem(
+                translation_request=translation_request,
+                source_cms_page=page,
+                target_cms_page=page,
+            )
+            try:
+                translation_request_item.clean()
+            except ValidationError as e:
+                enriched_error_message = ['{}: {}'.format(str(page), m) for m in list(e.message_dict.values())[0]]
+                raise ValidationError({'pages': enriched_error_message})
+
+        return self.cleaned_data
+
+    def save(self, *args, **kwargs):
+        self.instance.user = self.user
+        translation_request = super(BulkCreateTranslationForm, self).save(*args, **kwargs)
+
+        pages = self.cleaned_data['pages']
+        for page in pages:
+            translation_request.translation_request_items.create(source_cms_page=page, target_cms_page=page)
 
         return translation_request
 
