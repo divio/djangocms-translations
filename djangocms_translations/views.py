@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import CreateView, UpdateView, DetailView
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext
 
 from cms.utils.conf import get_cms_setting
@@ -15,6 +16,7 @@ from cms.utils.conf import get_cms_setting
 from . import forms, models
 from .cms_renderer import UnboundPluginRenderer
 from .models import TranslationRequest
+from .tasks import prepare_translation_bulk_request
 
 
 @require_GET
@@ -105,13 +107,23 @@ class CreateTranslationRequestView(CreateView):
         return response
 
 
-class BulkCreateTranslationRequestView(CreateTranslationRequestView):
+class BulkCreateTranslationRequestView(CreateView):
+    template_name = 'djangocms_translations/create_request.html'
     form_class = forms.BulkCreateTranslationForm
+
+    def get_success_url(self):
+        return reverse('admin:djangocms_translations_translationrequest_changelist')
 
     def get_form_kwargs(self):
         form_kwargs = super(BulkCreateTranslationRequestView, self).get_form_kwargs()
         form_kwargs['user'] = self.request.user
         return form_kwargs
+
+    def form_valid(self, form):
+        response = super(BulkCreateTranslationRequestView, self).form_valid(form)
+        prepare_translation_bulk_request.delay(self.object.id)
+        messages.info(self.request, 'Bulk is being processed in background. Please check the status in a few moments.')
+        return response
 
 
 class ChooseTranslationQuoteView(UpdateView):
