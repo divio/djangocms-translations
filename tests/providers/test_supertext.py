@@ -10,7 +10,7 @@ from djangocms_transfer.exporter import export_page
 from djangocms_translations.providers.supertext import (
     SupertextTranslationProvider, _get_translation_export_content, _set_translation_import_content,
 )
-from djangocms_translations.models import TranslationRequest, TranslationOrder
+from djangocms_translations.models import TranslationRequest, TranslationRequestItem, TranslationOrder
 
 
 class GetTranslationExportContentTestCase(CMSTestCase):
@@ -263,21 +263,25 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
         self.parent.body = self.parent_body
         self.parent.save()
 
-        self.export_content = json.loads(export_page(self.page, 'en'))
-
         self.translation_request = TranslationRequest.objects.create(
             user=self.user,
-            source_cms_page=self.page,
-            target_cms_page=self.page,
             provider_backend='supertext',
             source_language='en',
             target_language='pt',
-            export_content=json.dumps(self.export_content),
+        )
+
+        self.translation_request_item = TranslationRequestItem.objects.create(
+            translation_request=self.translation_request,
+            source_cms_page=self.page,
+            target_cms_page=self.page,
         )
 
         self.translation_order = TranslationOrder.objects.create(request=self.translation_request)
 
         self.provider = SupertextTranslationProvider(self.translation_request)
+
+        self.translation_request.export_content_from_cms()
+        self.export_content = json.loads(self.translation_request.export_content)
 
         self.expected_request_content = {
             'Groups': [
@@ -288,7 +292,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
                             'Content': _get_translation_export_content('body', self.export_content[0]['plugins'][0])[0],
                         },
                     ],
-                    'GroupId': '{}:content:{}'.format(self.page.pk, self.parent.id)
+                    'GroupId': '{}:content:{}'.format(self.translation_request_item.pk, self.parent.id)
                 },
             ],
             'ContentType': 'text/html',
@@ -320,20 +324,24 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
 
         import_data = self.provider.get_import_data()
 
+        self.assertIsInstance(import_data, dict)
         self.assertEquals(len(import_data), 1)
-        self.assertEquals(len(import_data[0].plugins), 3)  # Decompress enriched parent to have parent and children.
+        self.assertTrue(self.translation_request_item.pk in import_data.keys())
+        self.assertEquals(len(import_data[self.translation_request_item.pk]), 1)
 
-        self.assertEquals(import_data[0].plugins[0].plugin_type, 'DummyTextPlugin')
+        placeholder = import_data[self.translation_request_item.pk][0]
+        self.assertEquals(len(placeholder.plugins), 3)
+        self.assertEquals(placeholder.plugins[0].plugin_type, 'DummyTextPlugin')
         self.assertEquals(
-            import_data[0].plugins[0].data['body'],
+            placeholder.plugins[0].data['body'],
             (
                 '<p>Por favor <cms-plugin id="{}">entre em contato comigo</cms-plugin> '
                 '<cms-plugin id="{}"></cms-plugin> algum dia desses.</p>'
             ).format(self.child.pk, self.child2.pk)
         )
 
-        self.assertEquals(import_data[0].plugins[1].plugin_type, 'DummyLinkPlugin')
-        self.assertEquals(import_data[0].plugins[1].data['label'], 'entre em contato comigo')
+        self.assertEquals(placeholder.plugins[1].plugin_type, 'DummyLinkPlugin')
+        self.assertEquals(placeholder.plugins[1].data['label'], 'entre em contato comigo')
 
-        self.assertEquals(import_data[0].plugins[2].plugin_type, 'DummySpacerPlugin')
-        self.assertEquals(import_data[0].plugins[2].data, {})
+        self.assertEquals(placeholder.plugins[2].plugin_type, 'DummySpacerPlugin')
+        self.assertEquals(placeholder.plugins[2].data, {})
