@@ -83,15 +83,15 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     )
 
     def pretty_provider_options(self, obj):
-        return pretty_json(json.dumps(obj.provider_options))
+        return pretty_json(obj.provider_options)
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_request_content(self, obj):
-        return pretty_json(json.dumps(obj.request_content))
+        return pretty_json(obj.request_content)
     pretty_request_content.short_description = _('Request content')
 
     def pretty_response_content(self, obj):
-        return pretty_json(json.dumps(obj.response_content))
+        return pretty_json(obj.response_content)
     pretty_response_content.short_description = _('Response content')
 
 
@@ -157,7 +157,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     pretty_target_language.short_description = _('Target language')
 
     def pretty_provider_options(self, obj):
-        return pretty_json(json.dumps(obj.provider_options))
+        return pretty_json(obj.provider_options)
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_export_content(self, obj):
@@ -165,7 +165,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     pretty_export_content.short_description = _('Export content')
 
     def pretty_request_content(self, obj):
-        return pretty_json(json.dumps(obj.request_content))
+        return pretty_json(obj.request_content)
     pretty_request_content.short_description = _('Request content')
 
     def action(self, obj):
