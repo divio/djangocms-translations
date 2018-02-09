@@ -151,9 +151,9 @@ class TranslationRequest(models.Model):
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
-        # FIXME: placeholders/get_import_data() has to be adjusted to deal with translationRequest instead of items.
         import_error = False
-        for translation_request_item, placeholders in import_data.items():
+        for translation_request_item_pk, placeholders in import_data.items():
+            translation_request_item = self.translation_request_items.get(id=translation_request_item_pk)
             try:
                 import_plugins_to_page(
                     placeholders=placeholders,
@@ -207,7 +207,8 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
-        for translation_request_item, placeholders in self.provider.get_import_data():
+        for translation_request_item_pk, placeholders in self.provider.get_import_data():
+            translation_request_item = self.translation_request_items.get(id=translation_request_item_pk)
             page_placeholders = translation_request_item.source_cms_page.get_declared_placeholders()
 
             plugins_by_placeholder = {
