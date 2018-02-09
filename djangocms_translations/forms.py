@@ -9,6 +9,7 @@ from cms.models import Page
 from . import conf
 from . import models
 
+
 class CreateTranslationForm(forms.ModelForm):
     source_cms_page = PageSelectFormField()
     target_cms_page = PageSelectFormField()

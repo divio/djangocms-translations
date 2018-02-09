@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
