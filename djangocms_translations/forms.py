@@ -54,8 +54,7 @@ class CreateTranslationForm(forms.ModelForm):
 
 
 class BulkCreateTranslationForm(forms.ModelForm):
-    # FIXME: Only draft/public?
-    pages = forms.ModelMultipleChoiceField(Page.objects.drafts().filter(node__site=settings.SITE_ID))
+    pages = forms.ModelMultipleChoiceField(Page.objects.drafts())
 
     class Meta:
         model = models.TranslationRequest
@@ -69,6 +68,7 @@ class BulkCreateTranslationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(BulkCreateTranslationForm, self).__init__(*args, **kwargs)
+        self.fields['pages'].queryset = self.fields['pages'].queryset.filter(node__site=settings.SITE_ID)
 
     def clean(self, *args, **kwargs):
         super(BulkCreateTranslationForm, self).clean(*args, **kwargs)

@@ -38,10 +38,10 @@ Developing via DjangoCMS-helper
     # Add a POSTGRES database. Consider using user=password=database_name=djangocmstranslations as this is the default for tests/settings.py. Otherwise you'll need to set DJANGOCMS_TRANSLATIONS_DATABASE_URL env var accordingly.
 
     # Migrate database
-    djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
+    CELERY_ALWAYS_EAGER=1 djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
 
     # Run server
-    djangocms-helper djangocms_translations runserver --cms --extra-settings=tests/settings.py
+    CELERY_ALWAYS_EAGER=1 djangocms-helper djangocms_translations runserver --cms --extra-settings=tests/settings.py
 
     # In order to test the supertext integration:
     # 1) Set up a dev accont for supertext (https://dev.supertext.ch/en/signup) and use it

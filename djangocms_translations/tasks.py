@@ -1,26 +1,16 @@
-from functools import wraps
+from distutils.util import strtobool
+import os
 
-from . import conf
+from celery import Celery
+
 from .models import TranslationRequest
 
-if conf.TRANSLATIONS_USE_CELERY:
-    from aldryn_celery import celery_app as app
-
-    task_decorator = app.task
-
-else:
-    def fake_task(func):
-        @wraps(func)
-        def wrapped(*args, **kwargs):
-            func(*args, **kwargs)
-
-        wrapped.delay = wrapped
-        return wrapped
-
-    task_decorator = fake_task
+# FIXME: Ideally we should use @shared_task but for this we need a broker (even when testing locally)
+app = Celery('djangocms_translations')
+app.conf.update({'task_always_eager': bool(strtobool(os.environ.get('CELERY_ALWAYS_EAGER', '0')))})
 
 
-@task_decorator
+@app.task
 def prepare_translation_bulk_request(translation_request_id):
     translation_request = TranslationRequest.objects.get(id=translation_request_id)
     translation_request.export_content_from_cms()

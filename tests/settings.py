@@ -32,7 +32,8 @@ HELPER_SETTINGS = {
     )},
 
     'INSTALLED_APPS': [
-        'djangocms_text_ckeditor'
+        'djangocms_text_ckeditor',
+        'celery',
     ],
     'ALLOWED_HOSTS': [
         'localhost'
@@ -64,7 +65,6 @@ HELPER_SETTINGS = {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
         'DummyLinkPlugin': {'text_field_child_label': 'label'},
     },
-    'DJANGOCMS_TRANSLATIONS_USE_CELERY': False,
 }
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
