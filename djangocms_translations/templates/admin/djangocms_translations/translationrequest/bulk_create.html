@@ -4,10 +4,10 @@
     {% if errors %}
         <p class="errornote">
         {% blocktrans count errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
-        </p>
         {% for error in adminform.non_field_errors %}
-            {{ error|safe }}
+            <br>{{ error|safe }}
         {% endfor %}
+        </p>
 
     {% endif %}
     <form action="" method="post" enctype="multipart/form-data">
