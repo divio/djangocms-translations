@@ -54,8 +54,7 @@ class CreateTranslationForm(forms.ModelForm):
 
 
 class BulkCreateTranslationForm(forms.ModelForm):
-    # FIXME: <CMS3.5 compat?
-    # FIXME: Only draft/non draft?
+    # FIXME: Only draft/public?
     pages = forms.ModelMultipleChoiceField(Page.objects.drafts().filter(node__site=settings.SITE_ID))
 
     class Meta:

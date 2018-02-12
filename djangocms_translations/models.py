@@ -96,7 +96,7 @@ class TranslationRequest(models.Model):
         self.save(update_fields=('export_content',))
         self.set_status(self.STATES.OPEN)
 
-    def get_quote_from_provider(self):  # FIXME: rename to get_quotes_from_provider (plural) ?
+    def get_quote_from_provider(self):
         self.set_status(self.STATES.PENDING_QUOTE)
 
         provider_quote = self.provider.get_quote()
@@ -166,7 +166,7 @@ class TranslationRequest(models.Model):
                 import_error = True
 
         if import_error:
-            # FIXME: this or all-or-nothing?
+            # FIXME: this or all-or-nothing (atomic)?
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         self.set_status(self.STATES.IMPORTED, commit=False)
@@ -231,8 +231,7 @@ class TranslationRequest(models.Model):
                 try:
                     ar_placeholder._import_plugins(bound_plugins)
                 except (IntegrityError, ObjectDoesNotExist):
-                    # return False
-                    raise  # FIXME: what about fail loudly? The old 'return False' wasn't being used at all.
+                    raise
 
     def clean(self, exclude=None):
         if self.source_language == self.target_language:

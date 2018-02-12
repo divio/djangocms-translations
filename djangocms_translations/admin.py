@@ -316,3 +316,89 @@ class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
         query = request.GET.copy()
         query['plugin'] = plugin_id
         return redirect('{}?{}'.format(obj.get_add_url(), query.urlencode()))
+
+
+from functools import partial
+from cms.models import CMSPlugin, Page
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import render
+from .forms import BulkCreateTranslationForm
+from .models import TranslationRequest
+from .tasks import prepare_translation_bulk_request
+
+
+class BulkTranslationPage(Page):
+    class Meta:
+        proxy = True
+        verbose_name = 'Page for bulk translation'
+        verbose_name_plural = 'Pages for bulk translation'
+
+
+@admin.register(BulkTranslationPage)
+class BulkTranslationPageAdmin(admin.ModelAdmin):
+    list_display = ('pretty_title', )
+    model = BulkTranslationPage
+    INDENT = 4
+
+    def get_queryset(self, request):
+        return (
+            Page.objects.
+            drafts().
+            filter(node__site=settings.SITE_ID)
+            .order_by('node__path')
+            .select_related('node')
+        )
+
+    def pretty_title(self, item):
+        return '{}{}'.format('&nbsp;' * (item.node.depth - 1) * self.INDENT, item)
+    pretty_title.short_description = _('title')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_actions(self, request):
+        actions = {}
+        languages = settings.LANGUAGES
+        providers = TranslationRequest.PROVIDERS
+
+        for source_language, source_language_label in languages:
+            for target_language, target_language_label in languages:
+                if source_language == target_language:
+                    continue
+
+                for provider, provider_label in providers:
+                    data = {
+                        'source_language': source_language,
+                        'target_language': target_language,
+                        'provider_backend': provider
+                    }
+                    actions['bulk_{}_{}_{}'.format(source_language, target_language, provider)] = (
+                        partial(self.bulk_translation, data=data),
+                        'bulk_{}_{}_{}'.format(source_language, target_language, provider),
+                        _(
+                            'Bulk translate via {} ({} --> {})'
+                            .format(provider_label, source_language_label, target_language_label)
+                        )
+                    )
+
+        return actions
+
+    def bulk_translation(self, modeladmin, request, queryset, data):
+        data['pages'] = queryset
+        form = BulkCreateTranslationForm(data=data, user=request.user)
+
+        if form.is_valid():
+            translation_request = form.save()
+            prepare_translation_bulk_request.delay(translation_request.id)
+            message = 'Bulk is being processed in background. Please check the status in a few moments.'
+            self.message_user(request, message)
+            return redirect(reverse('admin:djangocms_translations_translationrequest_changelist'))
+
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    self.message_user(request, '{}: {}'.format(field, error), level=messages.ERROR)
