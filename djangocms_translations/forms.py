@@ -10,6 +10,14 @@ from . import conf
 from . import models
 
 
+class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
+    widget = forms.CheckboxSelectMultiple
+    INDENT = 8
+
+    def label_from_instance(self, obj):
+        return mark_safe('{}{}'.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj))
+
+
 class CreateTranslationForm(forms.ModelForm):
     source_cms_page = PageSelectFormField()
     target_cms_page = PageSelectFormField()
@@ -30,10 +38,13 @@ class CreateTranslationForm(forms.ModelForm):
 
     def clean(self, *args, **kwargs):
         super(CreateTranslationForm, self).clean(*args, **kwargs)
+        if not self.is_valid():
+            return
+
         translation_request_data = self.cleaned_data.copy()
         self.translation_request_item_data = {
-            'source_cms_page': translation_request_data.pop('source_cms_page', None),
-            'target_cms_page': translation_request_data.pop('target_cms_page', None),
+            'source_cms_page': translation_request_data.pop('source_cms_page'),
+            'target_cms_page': translation_request_data.pop('target_cms_page'),
         }
         translation_request = models.TranslationRequest(**translation_request_data)
 
@@ -54,6 +65,8 @@ class CreateTranslationForm(forms.ModelForm):
 
 
 class TranslateInBulkStep1Form(forms.ModelForm):
+    ''' Step 1: creates the <TranslationRequest> (without <TranslationRequestItem>s). '''
+
     class Meta:
         model = models.TranslationRequest
         fields = [
@@ -71,15 +84,9 @@ class TranslateInBulkStep1Form(forms.ModelForm):
         return super(TranslateInBulkStep1Form, self).save(*args, **kwargs)
 
 
-class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
-    widget = forms.CheckboxSelectMultiple
-    INDENT = 8
-
-    def label_from_instance(self, obj):
-        return mark_safe('{}{}'.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj))
-
-
 class TranslateInBulkStep2Form(forms.Form):
+    ''' Step 2: adds <TranslationRequestItem>s to <TranslationRequest> created on Step 1. '''
+
     pages = PageTreeMultipleChoiceField(Page.objects.drafts())
 
     def __init__(self, *args, **kwargs):

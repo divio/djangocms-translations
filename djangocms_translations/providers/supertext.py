@@ -142,7 +142,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
                     if field:
                         plugin_dict[subplugin_id]['data'][field] = subplugin_content
 
-        # TLRD: return_data is like {translation_request_item_pk: [<djangocms_transer.ArchivedPlaceholder>, ]}
+        # TLRD: return_data is like {translation_request_item_pk: [<djangocms_transfer.ArchivedPlaceholder>, ]}
         return_data = {}
         for translation_request_item_pk, placeholders_dict in data.items():
             data = json.dumps([{

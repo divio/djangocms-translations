@@ -25,8 +25,12 @@ def adjust_import_data_view(request, pk):
         structure = get_cms_setting('CMS_TOOLBAR_URL__BUILD')
         return redirect(request.path + '?' + structure)
 
-    qs = TranslationRequest.objects.filter(state=TranslationRequest.STATES.IMPORT_FAILED)
-    trans_request = get_object_or_404(qs, pk=pk)
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IMPORT_FAILED)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
 
     if not trans_request.archived_placeholders.exists():
         raise Http404
@@ -49,16 +53,24 @@ def adjust_import_data_view(request, pk):
 @csrf_exempt
 @require_POST
 def process_provider_callback_view(request, pk):
-    qs = TranslationRequest.objects.filter(state=TranslationRequest.STATES.IN_TRANSLATION)
-    trans_request = get_object_or_404(qs, pk=pk)
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IN_TRANSLATION)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
     success = trans_request.import_response(request.body)
     return JsonResponse({'success': success})
 
 
 @login_required
 def import_from_archive(request, pk):
-    qs = TranslationRequest.objects.filter(state=TranslationRequest.STATES.IMPORT_FAILED)
-    trans_request = get_object_or_404(qs, pk=pk)
+    requests = (
+        TranslationRequest
+        .objects
+        .filter(state=TranslationRequest.STATES.IMPORT_FAILED)
+    )
+    trans_request = get_object_or_404(requests, pk=pk)
 
     if not trans_request.archived_placeholders.exists():
         raise Http404
