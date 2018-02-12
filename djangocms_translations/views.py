@@ -15,7 +15,6 @@ from cms.utils.conf import get_cms_setting
 from . import forms, models
 from .cms_renderer import UnboundPluginRenderer
 from .models import TranslationRequest
-from .tasks import prepare_translation_bulk_request
 
 
 @require_GET
@@ -103,25 +102,6 @@ class CreateTranslationRequestView(CreateView):
         response = super(CreateTranslationRequestView, self).form_valid(form)
         self.object.export_content_from_cms()
         self.object.get_quote_from_provider()
-        return response
-
-
-class BulkCreateTranslationRequestView(CreateView):
-    template_name = 'djangocms_translations/create_request.html'
-    form_class = forms.BulkCreateTranslationForm
-
-    def get_success_url(self):
-        return reverse('admin:djangocms_translations_translationrequest_changelist')
-
-    def get_form_kwargs(self):
-        form_kwargs = super(BulkCreateTranslationRequestView, self).get_form_kwargs()
-        form_kwargs['user'] = self.request.user
-        return form_kwargs
-
-    def form_valid(self, form):
-        response = super(BulkCreateTranslationRequestView, self).form_valid(form)
-        prepare_translation_bulk_request.delay(self.object.id)
-        messages.info(self.request, 'Bulk is being processed in background. Please check the status in a few moments.')
         return response
 
 

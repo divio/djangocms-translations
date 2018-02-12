@@ -53,13 +53,10 @@ class CreateTranslationForm(forms.ModelForm):
         return translation_request
 
 
-class BulkCreateTranslationForm(forms.ModelForm):
-    pages = forms.ModelMultipleChoiceField(Page.objects.drafts())
-
+class TranslateInBulkStep1Form(forms.ModelForm):
     class Meta:
         model = models.TranslationRequest
         fields = [
-            'pages',
             'source_language',
             'target_language',
             'provider_backend',
@@ -67,17 +64,43 @@ class BulkCreateTranslationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        super(BulkCreateTranslationForm, self).__init__(*args, **kwargs)
-        self.fields['pages'].queryset = self.fields['pages'].queryset.filter(node__site=settings.SITE_ID)
+        super(TranslateInBulkStep1Form, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.instance.user = self.user
+        return super(TranslateInBulkStep1Form, self).save(*args, **kwargs)
+
+
+class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
+    widget = forms.CheckboxSelectMultiple
+    INDENT = 8
+
+    def label_from_instance(self, obj):
+        return mark_safe('{}{}'.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj))
+
+
+class TranslateInBulkStep2Form(forms.Form):
+    pages = PageTreeMultipleChoiceField(Page.objects.drafts())
+
+    def __init__(self, *args, **kwargs):
+        self.translation_request = kwargs.pop('translation_request')
+        super(TranslateInBulkStep2Form, self).__init__(*args, **kwargs)
+
+        self.fields['pages'].queryset = (
+            self.fields['pages'].queryset
+            .filter(node__site=settings.SITE_ID)
+            .filter(title_set__language__in=[self.translation_request.source_language])
+            .filter(title_set__language__in=[self.translation_request.target_language])
+            .order_by('node__path')
+            .select_related('node')
+        )
 
     def clean(self, *args, **kwargs):
-        super(BulkCreateTranslationForm, self).clean(*args, **kwargs)
+        super(TranslateInBulkStep2Form, self).clean(*args, **kwargs)
         if not self.is_valid():
             return
 
-        translation_request_data = self.cleaned_data.copy()
-        pages = translation_request_data.pop('pages')
-        translation_request = models.TranslationRequest(**translation_request_data)
+        pages = self.cleaned_data['pages']
 
         if len(pages) > conf.TRANSLATIONS_MAX_PAGES_PER_BULK:
             message = (
@@ -88,7 +111,7 @@ class BulkCreateTranslationForm(forms.ModelForm):
 
         for page in pages:
             translation_request_item = models.TranslationRequestItem(
-                translation_request=translation_request,
+                translation_request=self.translation_request,
                 source_cms_page=page,
                 target_cms_page=page,
             )
@@ -101,14 +124,9 @@ class BulkCreateTranslationForm(forms.ModelForm):
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
-        self.instance.user = self.user
-        translation_request = super(BulkCreateTranslationForm, self).save(*args, **kwargs)
-
         pages = self.cleaned_data['pages']
         for page in pages:
-            translation_request.translation_request_items.create(source_cms_page=page, target_cms_page=page)
-
-        return translation_request
+            self.translation_request.translation_request_items.create(source_cms_page=page, target_cms_page=page)
 
 
 class QuoteInput(RadioChoiceInput):

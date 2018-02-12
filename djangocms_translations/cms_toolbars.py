@@ -24,11 +24,8 @@ class TranslationsToolbar(CMSToolbar):
         overview_url = reverse('admin:djangocms_translations_translationrequest_changelist')
         menu.add_sideframe_item(_('Overview'), url=overview_url)
 
-        bulk_translate_url = reverse('admin:bulk-create-translation-request')
+        bulk_translate_url = reverse('admin:translate-in-bulk-step-1')
         menu.add_sideframe_item(_('Translate in bulk'), url=bulk_translate_url)
-
-        bulk_translate_url = reverse('admin:djangocms_translations_bulktranslationpage_changelist')
-        menu.add_sideframe_item(_('Translate in bulk 2'), url=bulk_translate_url)
 
         current_language = get_language_from_request(self.request)
         base_url = (
