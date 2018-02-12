@@ -338,7 +338,6 @@ class BulkTranslationPage(Page):
 @admin.register(BulkTranslationPage)
 class BulkTranslationPageAdmin(admin.ModelAdmin):
     list_display = ('pretty_title', )
-    model = BulkTranslationPage
     INDENT = 4
 
     def get_queryset(self, request):
@@ -353,6 +352,7 @@ class BulkTranslationPageAdmin(admin.ModelAdmin):
     def pretty_title(self, item):
         return '{}{}'.format('&nbsp;' * (item.node.depth - 1) * self.INDENT, item)
     pretty_title.short_description = _('title')
+    pretty_title.allow_tags = True
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -386,7 +386,7 @@ class BulkTranslationPageAdmin(admin.ModelAdmin):
         return actions
 
     def bulk_translation(self, modeladmin, request, queryset, data):
-        data['pages'] = queryset
+        data['pages'] = list(queryset.values_list('id', flat=True))
         form = BulkCreateTranslationForm(data=data, user=request.user)
 
         if form.is_valid():

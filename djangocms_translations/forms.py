@@ -72,6 +72,9 @@ class BulkCreateTranslationForm(forms.ModelForm):
 
     def clean(self, *args, **kwargs):
         super(BulkCreateTranslationForm, self).clean(*args, **kwargs)
+        if not self.is_valid():
+            return
+
         translation_request_data = self.cleaned_data.copy()
         pages = translation_request_data.pop('pages')
         translation_request = models.TranslationRequest(**translation_request_data)
