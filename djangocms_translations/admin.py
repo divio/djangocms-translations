@@ -376,14 +376,12 @@ class BulkTranslationPageAdmin(admin.ModelAdmin):
                         'target_language': target_language,
                         'provider_backend': provider
                     }
-                    actions['bulk_{}_{}_{}'.format(source_language, target_language, provider)] = (
-                        partial(self.bulk_translation, data=data),
-                        'bulk_{}_{}_{}'.format(source_language, target_language, provider),
-                        _(
-                            'Bulk translate via {} ({} --> {})'
-                            .format(provider_label, source_language_label, target_language_label)
-                        )
-                    )
+                    action_method = partial(self.bulk_translation, data=data)
+                    action_identifier = 'bulk_{}_{}_{}'.format(source_language, target_language, provider)
+                    action_label = _(
+                        'Bulk translate via {} ({} --> {})'
+                    ).format(provider_label, source_language_label, target_language_label)
+                    actions[action_identifier] = (action_method, action_identifier, action_label)
 
         return actions
 
