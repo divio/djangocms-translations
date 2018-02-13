@@ -64,7 +64,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         if not response.ok:
             raise SupertextException(response.content)
-
         return response
 
     def get_export_data(self):

@@ -1,12 +1,11 @@
 from django.conf import settings
 from django import forms
-from django.core.exceptions import ValidationError
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from cms.forms.fields import PageSelectFormField
 from cms.models import Page
 
-from . import conf
 from . import models
 
 
@@ -19,9 +18,9 @@ class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
         target_link = obj.get_absolute_url(self.target_language)
 
         return mark_safe(
-            '{}{} '.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj) +
-            '<a href="{}" class="language-link" target="_blank">{}</a> '.format(source_link, self.source_language) +
-            '<a href="{}" class="language-link" target="_blank">{}</a> '.format(target_link, self.target_language)
+            '{}{} '.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, escape(obj)) +
+            '<a href="{}" target="_blank">{}</a> '.format(source_link, self.source_language) +
+            '<a href="{}" target="_blank">{}</a> '.format(target_link, self.target_language)
         )
 
 
@@ -112,38 +111,16 @@ class TranslateInBulkStep2Form(forms.Form):
             .select_related('node')
         )
 
-    def clean(self, *args, **kwargs):
-        super(TranslateInBulkStep2Form, self).clean(*args, **kwargs)
-        if not self.is_valid():
-            return
-
-        pages = self.cleaned_data['pages']
-
-        if len(pages) > conf.TRANSLATIONS_MAX_PAGES_PER_BULK:
-            message = (
-                'Bulk requests may contain up to {} pages (you selected {})'
-                .format(conf.TRANSLATIONS_MAX_PAGES_PER_BULK, len(pages))
-            )
-            raise ValidationError({'pages': message})
-
-        for page in pages:
-            translation_request_item = models.TranslationRequestItem(
-                translation_request=self.translation_request,
+    def save(self, *args, **kwargs):
+        translation_request_items = [
+            models.TranslationRequestItem(
                 source_cms_page=page,
                 target_cms_page=page,
+                translation_request=self.translation_request
             )
-            try:
-                translation_request_item.clean()
-            except ValidationError as e:
-                enriched_error_message = ['{}: {}'.format(str(page), m) for m in list(e.message_dict.values())[0]]
-                raise ValidationError({'pages': enriched_error_message})
-
-        return self.cleaned_data
-
-    def save(self, *args, **kwargs):
-        pages = self.cleaned_data['pages']
-        for page in pages:
-            self.translation_request.translation_request_items.create(source_cms_page=page, target_cms_page=page)
+            for page in self.cleaned_data['pages']
+        ]
+        models.TranslationRequestItem.objects.bulk_create(translation_request_items)
 
 
 class QuoteInput(RadioChoiceInput):

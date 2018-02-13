@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
+import json
+
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.views.decorators import staff_member_required
 from django.core.urlresolvers import reverse
 from django.db.models import ManyToOneRel
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
-
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
 from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
@@ -84,15 +87,16 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     )
 
     def pretty_provider_options(self, obj):
-        return pretty_json(obj.provider_options)
+        return pretty_json(json.dumps(obj.provider_options))
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_request_content(self, obj):
-        return pretty_json(obj.request_content)
+        return pretty_json(json.dumps(obj.request_content))
     pretty_request_content.short_description = _('Request content')
 
     def pretty_response_content(self, obj):
-        return pretty_json(obj.response_content)
+        data = json.dumps(obj.response_content) if isinstance(obj.response_content, dict) else obj.response_content
+        return pretty_json(data)
     pretty_response_content.short_description = _('Response content')
 
 
@@ -158,15 +162,16 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     pretty_target_language.short_description = _('Target language')
 
     def pretty_provider_options(self, obj):
-        return pretty_json(obj.provider_options)
+        return pretty_json(json.dumps(obj.provider_options))
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_export_content(self, obj):
-        return pretty_json(obj.export_content)
+        data = json.dumps(obj.export_content) if isinstance(obj.export_content, dict) else obj.export_content
+        return pretty_json(data)
     pretty_export_content.short_description = _('Export content')
 
     def pretty_request_content(self, obj):
-        return pretty_json(obj.request_content)
+        return pretty_json(json.dumps(obj.request_content))
     pretty_request_content.short_description = _('Request content')
 
     def action(self, obj):
@@ -187,15 +192,14 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             )
 
     def _get_template_context(self, form, title, **kwargs):
-        opts = self.model._meta
         context = {
             'adminform': form,
             'has_change_permission': True,
             'media': self.media + form.media,
-            'opts': opts,
+            'opts': self.opts,
             'root_path': reverse('admin:index'),
             'current_app': self.admin_site.name,
-            'app_label': opts.app_label,
+            'app_label': self.opts.app_label,
             'title': title,
             'original': title,
             'errors': form.errors,
@@ -203,39 +207,41 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         context.update(kwargs)
         return context
 
+    @method_decorator(staff_member_required)
     def translate_in_bulk_step_1(self, request):
-        if request.session.get('bulk_translation_step') == 2:
-            return redirect(reverse('admin:translate-in-bulk-step-2'))
-        request.session['bulk_translation_step'] = 1
+        session = request.session
+        if session.get('bulk_translation_step') == 2:
+            return redirect('admin:translate-in-bulk-step-2')
+        session['bulk_translation_step'] = 1
 
         form = TranslateInBulkStep1Form(data=request.POST or None, user=request.user)
-        if request.method == 'POST':
-            if form.is_valid():
-                translation_request = form.save()
-                request.session['translation_request_pk'] = translation_request.pk
-                return redirect(reverse('admin:translate-in-bulk-step-2'))
+        if form.is_valid():
+            translation_request = form.save()
+            session['translation_request_pk'] = translation_request.pk
+            return redirect('admin:translate-in-bulk-step-2')
 
         title = _('Create bulk translations (step 1)')
         context = self._get_template_context(form, title)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create.html', context)
 
+    @method_decorator(staff_member_required)
     def translate_in_bulk_step_2(self, request):
-        if request.session.get('bulk_translation_step') not in (1, 2):
-            raise HttpResponseNotFound()
-        request.session['bulk_translation_step'] = 2
+        session = request.session
+        if session.get('bulk_translation_step') not in (1, 2) or not(session.get('translation_request_pk')):
+            raise Http404()
+        session['bulk_translation_step'] = 2
 
-        translation_request = TranslationRequest.objects.get(id=request.session['translation_request_pk'])
+        translation_request = get_object_or_404(TranslationRequest.objects, id=session['translation_request_pk'])
         form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
-        if request.method == 'POST':
-            if form.is_valid():
-                form.save()
-                request.session.pop('translation_request_pk')
-                request.session.pop('bulk_translation_step')
-                prepare_translation_bulk_request.delay(translation_request.id)
+        if form.is_valid():
+            form.save()
+            session.pop('translation_request_pk')
+            session.pop('bulk_translation_step')
+            prepare_translation_bulk_request.delay(translation_request.pk)
 
-                message = 'Bulk is being processed in background. Please check the status in a few moments.'
-                self.message_user(request, message)
-                return redirect(reverse('admin:djangocms_translations_translationrequest_changelist'))
+            message = _('Bulk is being processed in background. Please check the status in a few moments.')
+            self.message_user(request, message)
+            return redirect('admin:djangocms_translations_translationrequest_changelist')
 
         title = _('Create bulk translations (step 2)')
         context = self._get_template_context(form, title, translation_request=translation_request)

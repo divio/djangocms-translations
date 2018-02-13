@@ -86,11 +86,8 @@ class TranslationRequest(models.Model):
 
     def export_content_from_cms(self):
         export_content = []
-        for translation_request_item in self.translation_request_items.all():
-            page_export_content = get_page_export_data(translation_request_item.source_cms_page, self.source_language)
-            for x in page_export_content:
-                x['translation_request_item_pk'] = translation_request_item.pk
-            export_content.extend(page_export_content)
+        for item in self.translation_request_items.all():
+            export_content.extend(item.get_export_data(self.source_language))
 
         self.export_content = json.dumps(export_content, cls=DjangoJSONEncoder)
         self.save(update_fields=('export_content',))
@@ -151,9 +148,10 @@ class TranslationRequest(models.Model):
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
+        id_item_mapping = {x.id: x for x in self.translation_request_items.all()}
         import_error = False
         for translation_request_item_pk, placeholders in import_data.items():
-            translation_request_item = self.translation_request_items.get(id=translation_request_item_pk)
+            translation_request_item = id_item_mapping[translation_request_item_pk]
             try:
                 import_plugins_to_page(
                     placeholders=placeholders,
@@ -191,6 +189,7 @@ class TranslationRequest(models.Model):
                 .target_cms_page
                 .placeholders
                 .filter(slot__in=plugins_by_placeholder)
+                .select_related('node')
             )
 
             for placeholder in page_placeholders:
@@ -207,8 +206,10 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
+        id_item_mapping = {x.id: x for x in self.translation_request_items.all()}
+
         for translation_request_item_pk, placeholders in self.provider.get_import_data():
-            translation_request_item = self.translation_request_items.get(id=translation_request_item_pk)
+            translation_request_item = id_item_mapping[translation_request_item_pk]
             page_placeholders = translation_request_item.source_cms_page.get_declared_placeholders()
 
             plugins_by_placeholder = {
@@ -231,7 +232,7 @@ class TranslationRequest(models.Model):
                 try:
                     ar_placeholder._import_plugins(bound_plugins)
                 except (IntegrityError, ObjectDoesNotExist):
-                    raise
+                    return False
 
     def clean(self, exclude=None):
         if self.source_language == self.target_language:
@@ -261,6 +262,12 @@ class TranslationRequestItem(models.Model):
             })
 
         return super(TranslationRequestItem, self).clean()
+
+    def get_export_data(self, language):
+        data = get_page_export_data(self.source_cms_page, language)
+        for d in data:
+            d['translation_request_item_pk'] = self.pk
+        return data
 
 
 class TranslationQuote(models.Model):

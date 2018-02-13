@@ -8,7 +8,7 @@ REQUIREMENTS = [
     'pygments',
     'yurl',
     'requests',
-    'celery>=4.0',
+    'celery>=3.0,<4.0',  # Aldryn-celery supports only 3.X
     # 'djangocms-transfer',  # Private repo
     # 'django-cms',  # Develop branch
     'django>=1.10,<1.11',  # TODO: 'RadioFieldRenderer' was removed in 1.11

@@ -32,7 +32,6 @@ HELPER_SETTINGS = {
     )},
 
     'INSTALLED_APPS': [
-        'djangocms_text_ckeditor',
         'celery',
     ],
     'ALLOWED_HOSTS': [

@@ -87,12 +87,6 @@ def pretty_data(data, LexerClass):
 
 
 def pretty_json(data):
-    if not data:
-        data = {}
-
-    if isinstance(data, dict):
-        data = json.dumps(data)
-
     data = json.dumps(json.loads(data), sort_keys=True, indent=2)
     return pretty_data(data, JsonLexer)
 
