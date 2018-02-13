@@ -15,7 +15,14 @@ class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
     INDENT = 8
 
     def label_from_instance(self, obj):
-        return mark_safe('{}{}'.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj))
+        source_link = obj.get_absolute_url(self.source_language)
+        target_link = obj.get_absolute_url(self.target_language)
+
+        return mark_safe(
+            '{}{} '.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, obj) +
+            '<a href="{}" class="language-link" target="_blank">{}</a> '.format(source_link, self.source_language) +
+            '<a href="{}" class="language-link" target="_blank">{}</a> '.format(target_link, self.target_language)
+        )
 
 
 class CreateTranslationForm(forms.ModelForm):
@@ -93,11 +100,14 @@ class TranslateInBulkStep2Form(forms.Form):
         self.translation_request = kwargs.pop('translation_request')
         super(TranslateInBulkStep2Form, self).__init__(*args, **kwargs)
 
-        self.fields['pages'].queryset = (
-            self.fields['pages'].queryset
+        pages_field = self.fields['pages']
+        pages_field.source_language = self.translation_request.source_language
+        pages_field.target_language = self.translation_request.target_language
+        pages_field.queryset = (
+            pages_field.queryset
             .filter(node__site=settings.SITE_ID)
-            .filter(title_set__language__in=[self.translation_request.source_language])
-            .filter(title_set__language__in=[self.translation_request.target_language])
+            .filter(title_set__language__in=[pages_field.source_language])
+            .filter(title_set__language__in=[pages_field.target_language])
             .order_by('node__path')
             .select_related('node')
         )
