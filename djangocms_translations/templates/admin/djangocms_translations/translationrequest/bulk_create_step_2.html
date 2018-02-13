@@ -17,12 +17,38 @@
         }
         form .pages-list > label,
         form .pages-list > ul > li > label {
-            display: block !important;
+            display: -webkit-box !important;
+            display: -ms-flexbox !important;
+            display: flex !important;
             padding: 7px 10px 6px !important;
+            -webkit-box-align: center;
+                -ms-flex-align: center;
+                    align-items: center;
             margin: 0;
+            width: 100%;
+        }
+        form .pages-list > label input,
+        form .pages-list > ul > li > label input {
+            position: static !important;
+            margin: 0 10px 0 0 !important;
+        }
+        form .pages-list > ul > li > label a {
+            display: none;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        form .pages-list > ul > li > label a + a {
+            margin-left: 10px;
+        }
+        form .pages-list > ul > li > label:hover a {
+            display: block;
         }
         form .pages-list > ul > li > label.checked {
             background-color: rgba(0, 187, 244, 0.2);
+        }
+        form .pages-list > label:hover,
+        form .pages-list > ul > li > label:hover {
+            background-color: rgba(0, 0, 0, 0.1);
         }
     </style>
     {% if errors %}
