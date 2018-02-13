@@ -186,9 +186,9 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 _('Check Status'),
             )
 
-    def _get_template_context(self, form, title):
+    def _get_template_context(self, form, title, **kwargs):
         opts = self.model._meta
-        return {
+        context = {
             'adminform': form,
             'has_change_permission': True,
             'media': self.media + form.media,
@@ -200,8 +200,14 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             'original': title,
             'errors': form.errors,
         }
+        context.update(kwargs)
+        return context
 
     def translate_in_bulk_step_1(self, request):
+        if request.session.get('bulk_translation_step') == 2:
+            return redirect(reverse('admin:translate-in-bulk-step-2'))
+        request.session['bulk_translation_step'] = 1
+
         form = TranslateInBulkStep1Form(data=request.POST or None, user=request.user)
         if request.method == 'POST':
             if form.is_valid():
@@ -209,25 +215,31 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 request.session['translation_request_pk'] = translation_request.pk
                 return redirect(reverse('admin:translate-in-bulk-step-2'))
 
-        context = self._get_template_context(form, _('Create bulk translations (step 1)'))
+        title = _('Create bulk translations (step 1)')
+        context = self._get_template_context(form, title)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create.html', context)
 
     def translate_in_bulk_step_2(self, request):
+        if request.session.get('bulk_translation_step') not in (1, 2):
+            raise HttpResponseNotFound()
+        request.session['bulk_translation_step'] = 2
+
         translation_request = TranslationRequest.objects.get(id=request.session['translation_request_pk'])
         form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
         if request.method == 'POST':
             if form.is_valid():
                 form.save()
                 request.session.pop('translation_request_pk')
+                request.session.pop('bulk_translation_step')
                 prepare_translation_bulk_request.delay(translation_request.id)
 
                 message = 'Bulk is being processed in background. Please check the status in a few moments.'
                 self.message_user(request, message)
                 return redirect(reverse('admin:djangocms_translations_translationrequest_changelist'))
 
-        context = self._get_template_context(form, _('Create bulk translations (step 2)'))
-        return render(request,
-                      'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
+        title = _('Create bulk translations (step 2)')
+        context = self._get_template_context(form, title, translation_request=translation_request)
+        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
 
     def get_urls(self):
         return [
