@@ -226,7 +226,8 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 return redirect(reverse('admin:djangocms_translations_translationrequest_changelist'))
 
         context = self._get_template_context(form, _('Create bulk translations (step 2)'))
-        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create.html', context)
+        return render(request,
+                      'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
 
     def get_urls(self):
         return [

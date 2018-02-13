@@ -1,0 +1,101 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block content %}
+    <style type="text/css">
+        form .pages-list label {
+            text-transform: none !important;
+        }
+        form .pages-list > ul {
+            padding-left: 0;
+            padding-right: 0;
+            margin-top: 2px !important;
+            border: none !important;
+        }
+        form .pages-list > ul > li {
+            padding: 0 !important;
+            border: none !important;
+        }
+        form .pages-list > label,
+        form .pages-list > ul > li > label {
+            display: block !important;
+            padding: 7px 10px 6px !important;
+            margin: 0;
+        }
+        form .pages-list > ul > li > label.checked {
+            background-color: rgba(0, 187, 244, 0.2);
+        }
+    </style>
+    {% if errors %}
+        <p class="errornote">
+        {% blocktrans count errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+        {% for error in adminform.non_field_errors %}
+            <br>{{ error|safe }}
+        {% endfor %}
+        </p>
+
+    {% endif %}
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                {% for field in adminform %}
+                    <div class="form-row">
+                        <div{% if field.errors %} class="errors"{% endif %}>
+                            {% for error in field.errors %}
+                                {{ error|safe }}
+                            {% endfor %}
+                            <div class="pages-list">
+                                <h2>{{ field.label }}</h2>
+                                <label><input id="select-all" type="checkbox"> Select all</label>
+                                {{ field }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div class="submit-row">
+            <input type="submit" value="{% trans "Create" %}" class="default" name="create">
+        </div>
+    </form>
+    <script type="text/javascript">
+        (function () {
+            var selectAll = document.querySelector('#select-all');
+            var checkboxes = document.querySelectorAll('.pages-list ul input[type=checkbox]');
+            var checkboxesArray = Array.prototype.slice.call(checkboxes);
+            var isEveryCheckboxChecked = function (checkboxes) {
+                return checkboxes.every(function (checkbox) {
+                    return checkbox.checked;
+                });
+            }
+
+            selectAll.addEventListener('change', function (e) {
+                if (this.checked) {
+                    checkboxesArray.forEach(function (checkbox) {
+                        checkbox.checked = true;
+                        checkbox.parentNode.className = 'checked'
+                    });
+                } else {
+                    checkboxesArray.forEach(function (checkbox) {
+                        checkbox.checked = false;
+                        checkbox.parentNode.className = ''
+                    });
+                }
+            });
+
+            checkboxesArray.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    if (!this.checked) {
+                        selectAll.checked = false;
+                        this.parentNode.className = ''
+                    } else {
+                        this.parentNode.className = 'checked'
+                        if (isEveryCheckboxChecked(checkboxesArray)) {
+                            selectAll.checked = true;
+                        }
+                    }
+                });
+            });
+        }());
+    </script>
+{% endblock %}
