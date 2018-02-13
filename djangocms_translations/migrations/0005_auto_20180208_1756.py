@@ -34,6 +34,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='translationrequestitem',
             name='translation_request',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='translation_request_items', to='djangocms_translations.TranslationRequest'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='djangocms_translations.TranslationRequest'),
         ),
     ]

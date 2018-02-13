@@ -65,7 +65,7 @@ class CreateTranslationForm(forms.ModelForm):
         translation_request = super(CreateTranslationForm, self).save(*args, **kwargs)
 
         del self.translation_request_item_data['translation_request']
-        translation_request.translation_request_items.create(**self.translation_request_item_data)
+        translation_request.items.create(**self.translation_request_item_data)
 
         return translation_request
 

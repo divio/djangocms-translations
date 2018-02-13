@@ -86,7 +86,7 @@ class TranslationRequest(models.Model):
 
     def export_content_from_cms(self):
         export_content = []
-        for item in self.translation_request_items.all():
+        for item in self.items.all():
             export_content.extend(item.get_export_data(self.source_language))
 
         self.export_content = json.dumps(export_content, cls=DjangoJSONEncoder)
@@ -148,7 +148,7 @@ class TranslationRequest(models.Model):
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
-        id_item_mapping = {x.id: x for x in self.translation_request_items.all()}
+        id_item_mapping = {x.id: x for x in self.items.all()}
         import_error = False
         for translation_request_item_pk, placeholders in import_data.items():
             translation_request_item = id_item_mapping[translation_request_item_pk]
@@ -183,7 +183,7 @@ class TranslationRequest(models.Model):
             pl.slot: pl.get_plugins()
             for pl in self.archived_placeholders.all()
         }
-        for translation_request_item in self.translation_request_items.all():
+        for translation_request_item in self.items.all():
             page_placeholders = (
                 translation_request_item
                 .target_cms_page
@@ -206,7 +206,7 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
-        id_item_mapping = {x.id: x for x in self.translation_request_items.all()}
+        id_item_mapping = {x.id: x for x in self.items.all()}
 
         for translation_request_item_pk, placeholders in self.provider.get_import_data():
             translation_request_item = id_item_mapping[translation_request_item_pk]
@@ -242,7 +242,7 @@ class TranslationRequest(models.Model):
 
 
 class TranslationRequestItem(models.Model):
-    translation_request = models.ForeignKey(TranslationRequest, related_name='translation_request_items')
+    translation_request = models.ForeignKey(TranslationRequest, related_name='items')
     source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
     target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
 
