@@ -65,8 +65,8 @@ HELPER_SETTINGS = {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
         'DummyLinkPlugin': {'text_field_child_label': 'label'},
     },
-    'CELERY_TASK_EAGER_PROPAGATES': True,
-    'CELERY_TASK_ALWAYS_EAGER': True,
+    'CELERY_EAGER_PROPAGATES_EXCEPTIONS': True,
+    'CELERY_ALWAYS_EAGER': True,
 }
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
