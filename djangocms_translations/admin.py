@@ -10,6 +10,7 @@ from django.http import HttpResponseNotFound, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
@@ -49,7 +50,7 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
     fields = readonly_fields
 
     def _pretty_page_display(self, page):
-        return mark_safe('<a href="{}" target="_parent">{}</a>'.format(page.get_absolute_url(), page))
+        return mark_safe('<a href="{}" target="_parent">{}</a>'.format(page.get_absolute_url(), escape(page)))
 
     def pretty_source_cms_page(self, obj):
         return self._pretty_page_display(obj.source_cms_page)
