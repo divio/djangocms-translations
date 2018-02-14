@@ -6,6 +6,8 @@ import sys
 
 import dj_database_url
 
+from tests.celery import app  # noqa
+
 
 class DisableMigrations(dict):
     def __contains__(self, item):
@@ -30,7 +32,6 @@ HELPER_SETTINGS = {
         env='DJANGOCMS_TRANSLATIONS_DATABASE_URL',
         default='postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations'
     )},
-
     'INSTALLED_APPS': [
         'celery',
     ],
@@ -64,6 +65,8 @@ HELPER_SETTINGS = {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
         'DummyLinkPlugin': {'text_field_child_label': 'label'},
     },
+    'CELERY_TASK_EAGER_PROPAGATES': True,
+    'CELERY_TASK_ALWAYS_EAGER': True,
 }
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
