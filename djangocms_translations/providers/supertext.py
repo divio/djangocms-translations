@@ -1,5 +1,5 @@
 import json
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -116,11 +116,11 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         subplugins_already_processed = set()
 
         # TLRD: data is like {translation_request_item_pk: {placeholder_name: {plugin_pk: plugin_dict}}}
-        data = {}
+        data = defaultdict(dict)
         for x in export_content:
             translation_request_item_pk = x['translation_request_item_pk']
             plugin_dict = OrderedDict((plugin['pk'], plugin) for plugin in x['plugins'])
-            data.setdefault(translation_request_item_pk, {})[x['placeholder']] = plugin_dict
+            data[translation_request_item_pk][x['placeholder']] = plugin_dict
 
         for group in import_content['Groups']:
             translation_request_item_pk, placeholder, plugin_id = group['GroupId'].split(':')

@@ -148,7 +148,7 @@ class TranslationRequest(models.Model):
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
-        id_item_mapping = {x.id: x for x in self.items.all()}
+        id_item_mapping = self.items.in_bulk(import_data.keys())
         import_error = False
         for translation_request_item_pk, placeholders in import_data.items():
             translation_request_item = id_item_mapping[translation_request_item_pk]
@@ -183,13 +183,12 @@ class TranslationRequest(models.Model):
             pl.slot: pl.get_plugins()
             for pl in self.archived_placeholders.all()
         }
-        for translation_request_item in self.items.all():
+        for translation_request_item in self.items.select_related('target_cms_page'):
             page_placeholders = (
                 translation_request_item
                 .target_cms_page
                 .placeholders
                 .filter(slot__in=plugins_by_placeholder)
-                .select_related('node')
             )
 
             for placeholder in page_placeholders:
@@ -206,9 +205,10 @@ class TranslationRequest(models.Model):
 
     @transaction.atomic
     def _set_import_archive(self):
-        id_item_mapping = {x.id: x for x in self.items.all()}
+        import_data = self.provider.get_import_data()
+        id_item_mapping = self.items.in_bulk(import_data.keys())
 
-        for translation_request_item_pk, placeholders in self.provider.get_import_data():
+        for translation_request_item_pk, placeholders in import_data:
             translation_request_item = id_item_mapping[translation_request_item_pk]
             page_placeholders = translation_request_item.source_cms_page.get_declared_placeholders()
 

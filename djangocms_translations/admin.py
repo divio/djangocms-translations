@@ -96,7 +96,10 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     pretty_request_content.short_description = _('Request content')
 
     def pretty_response_content(self, obj):
-        data = json.dumps(obj.response_content) if isinstance(obj.response_content, dict) else obj.response_content
+        if isinstance(obj.response_content, dict):
+            data = json.dumps(obj.response_content)
+        else:
+            data = obj.response_content
         return pretty_json(data)
     pretty_response_content.short_description = _('Response content')
 
@@ -167,7 +170,10 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_export_content(self, obj):
-        data = json.dumps(obj.export_content) if isinstance(obj.export_content, dict) else obj.export_content
+        if isinstance(obj.export_content, dict):
+            data = json.dumps(obj.export_content)
+        else:
+            data = obj.export_content
         return pretty_json(data)
     pretty_export_content.short_description = _('Export content')
 
@@ -232,7 +238,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             raise Http404()
         session['bulk_translation_step'] = 2
 
-        translation_request = get_object_or_404(TranslationRequest.objects, id=session['translation_request_pk'])
+        translation_request = get_object_or_404(TranslationRequest.objects, pk=session['translation_request_pk'])
         form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
         if form.is_valid():
             form.save()

@@ -47,16 +47,17 @@ class CreateTranslationForm(forms.ModelForm):
         if not self.is_valid():
             return
 
-        translation_request_data = self.cleaned_data.copy()
-        self.translation_request_item_data = {
-            'source_cms_page': translation_request_data.pop('source_cms_page'),
-            'target_cms_page': translation_request_data.pop('target_cms_page'),
-        }
-        translation_request = models.TranslationRequest(**translation_request_data)
+        translation_request = models.TranslationRequest(
+            source_language=self.cleaned_data['source_language'],
+            target_language=self.cleaned_data['target_language'],
+            provider_backend=self.cleaned_data['provider_backend'],
+        )
 
-        self.translation_request_item_data['translation_request'] = translation_request
-        translation_request_item = models.TranslationRequestItem(**self.translation_request_item_data)
-        translation_request_item.clean()
+        models.TranslationRequestItem(
+            translation_request=translation_request,
+            source_cms_page=self.cleaned_data['source_cms_page'],
+            target_cms_page=self.cleaned_data['target_cms_page'],
+        ).clean()
 
         return self.cleaned_data
 
@@ -64,8 +65,10 @@ class CreateTranslationForm(forms.ModelForm):
         self.instance.user = self.user
         translation_request = super(CreateTranslationForm, self).save(*args, **kwargs)
 
-        del self.translation_request_item_data['translation_request']
-        translation_request.items.create(**self.translation_request_item_data)
+        translation_request.items.create(
+            source_cms_page=self.cleaned_data['source_cms_page'],
+            target_cms_page=self.cleaned_data['target_cms_page'],
+        )
 
         return translation_request
 
