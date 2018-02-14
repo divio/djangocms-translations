@@ -148,7 +148,7 @@ class TranslationRequest(models.Model):
             logger.exception("Received invalid data from {}".format(self.provider_backend))
             return self.set_status(self.STATES.IMPORT_FAILED)
 
-        id_item_mapping = self.items.in_bulk(import_data.keys())
+        id_item_mapping = self.items.in_bulk()
         import_error = False
         for translation_request_item_pk, placeholders in import_data.items():
             translation_request_item = id_item_mapping[translation_request_item_pk]
@@ -206,7 +206,7 @@ class TranslationRequest(models.Model):
     @transaction.atomic
     def _set_import_archive(self):
         import_data = self.provider.get_import_data()
-        id_item_mapping = self.items.in_bulk(import_data.keys())
+        id_item_mapping = self.items.in_bulk()
 
         for translation_request_item_pk, placeholders in import_data:
             translation_request_item = id_item_mapping[translation_request_item_pk]
