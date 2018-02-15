@@ -37,8 +37,6 @@ Developing via DjangoCMS-helper
 
     # Add a POSTGRES database. Consider using user=password=database_name=djangocmstranslations as this is the default for tests/settings.py. Otherwise you'll need to set DJANGOCMS_TRANSLATIONS_DATABASE_URL env var accordingly.
 
-    # Configure celery (including some broker of your choice). You can bypass this by setting CELERY_ALWAYS_EAGER=1 env var.
-
     # Migrate database
     djangocms-helper djangocms_translations migrate --cms --extra-settings=tests/settings.py
 
