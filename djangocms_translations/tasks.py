@@ -1,6 +1,10 @@
-from aldryn_celery import celery_app as app
+from celery import shared_task
+
+from .models import TranslationRequest
 
 
-@app.task
-def get_quote_from_provider(request):
-    return request.get_quote_from_provider()
+@shared_task
+def prepare_translation_bulk_request(translation_request_id):
+    translation_request = TranslationRequest.objects.get(id=translation_request_id)
+    translation_request.export_content_from_cms()
+    translation_request.get_quote_from_provider()

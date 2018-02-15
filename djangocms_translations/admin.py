@@ -3,20 +3,25 @@ import json
 
 from django.conf.urls import url
 from django.contrib import admin
+from django.contrib.admin.views.decorators import staff_member_required
 from django.core.urlresolvers import reverse
 from django.db.models import ManyToOneRel
-from django.http import HttpResponseNotFound
-from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponseNotFound, Http404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
-
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
 from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
 from cms.plugin_pool import plugin_pool
 
 from . import models, views
+from .forms import TranslateInBulkStep1Form, TranslateInBulkStep2Form
+from .models import TranslationRequest
+from .tasks import prepare_translation_bulk_request
 from .utils import get_plugin_form, pretty_json
 
 
@@ -26,6 +31,34 @@ class AllReadOnlyFieldsMixin(object):
             field.name for field in self.model._meta.get_fields()
             if not isinstance(field, ManyToOneRel)
         ] + list(self.readonly_fields)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
+    model = models.TranslationRequestItem
+    extra = 0
+
+    readonly_fields = (
+        'pretty_source_cms_page',
+        'pretty_target_cms_page',
+    )
+    fields = readonly_fields
+
+    def _pretty_page_display(self, page):
+        return mark_safe('<a href="{}" target="_parent">{}</a>'.format(page.get_absolute_url(), escape(page)))
+
+    def pretty_source_cms_page(self, obj):
+        return self._pretty_page_display(obj.source_cms_page)
+    pretty_source_cms_page.short_description = _('Source CMS Page')
+
+    def pretty_target_cms_page(self, obj):
+        return self._pretty_page_display(obj.target_cms_page)
+    pretty_target_cms_page.short_description = _('Target CMS Page')
 
 
 class TranslationQuoteInline(AllReadOnlyFieldsMixin, admin.TabularInline):
@@ -63,13 +96,18 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     pretty_request_content.short_description = _('Request content')
 
     def pretty_response_content(self, obj):
-        return pretty_json(json.dumps(obj.response_content))
+        if isinstance(obj.response_content, dict):
+            data = json.dumps(obj.response_content)
+        else:
+            data = obj.response_content
+        return pretty_json(data)
     pretty_response_content.short_description = _('Response content')
 
 
 @admin.register(models.TranslationRequest)
 class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     inlines = [
+        TranslationRequestItemInline,
         TranslationQuoteInline,
         TranslationOrderInline,
     ]
@@ -77,7 +115,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     list_filter = ('state',)
     list_display = (
         'date_created',
-        'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'status',
@@ -93,7 +130,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             'date_received',
             'date_imported',
         ),
-        'pretty_source_cms_pages',
         (
             'pretty_source_language',
             'pretty_target_language',
@@ -110,7 +146,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'date_submitted',
         'date_received',
         'date_imported',
-        'pretty_source_cms_pages',
         'pretty_source_language',
         'pretty_target_language',
         'pretty_provider_options',
@@ -118,16 +153,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'pretty_request_content',
         'selected_quote',
     )
-
-    def pretty_source_cms_pages(self, obj):
-        source = obj.source_cms_page
-        target = obj.target_cms_page
-
-        return mark_safe(
-            '<a href="{}" target="_parent">{}</a> --> <a href="{}" target="_parent">{}</a>'
-            .format(source.get_absolute_url(), source, target.get_absolute_url(), target)
-        )
-    pretty_source_cms_pages.short_description = _('CMS Pages (from --> to)')
 
     def _get_language_info(self, lang_code):
         return get_language_info(lang_code)['name']
@@ -145,7 +170,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     pretty_provider_options.short_description = _('Provider options')
 
     def pretty_export_content(self, obj):
-        return pretty_json(obj.export_content)
+        if isinstance(obj.export_content, dict):
+            data = json.dumps(obj.export_content)
+        else:
+            data = obj.export_content
+        return pretty_json(data)
     pretty_export_content.short_description = _('Export content')
 
     def pretty_request_content(self, obj):
@@ -169,8 +198,74 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 _('Check Status'),
             )
 
+    def _get_template_context(self, form, title, **kwargs):
+        context = {
+            'adminform': form,
+            'has_change_permission': True,
+            'media': self.media + form.media,
+            'opts': self.opts,
+            'root_path': reverse('admin:index'),
+            'current_app': self.admin_site.name,
+            'app_label': self.opts.app_label,
+            'title': title,
+            'original': title,
+            'errors': form.errors,
+        }
+        context.update(kwargs)
+        return context
+
+    @method_decorator(staff_member_required)
+    def translate_in_bulk_step_1(self, request):
+        session = request.session
+        if session.get('bulk_translation_step') == 2:
+            return redirect('admin:translate-in-bulk-step-2')
+        session['bulk_translation_step'] = 1
+
+        form = TranslateInBulkStep1Form(data=request.POST or None, user=request.user)
+        if form.is_valid():
+            translation_request = form.save()
+            session['translation_request_pk'] = translation_request.pk
+            return redirect('admin:translate-in-bulk-step-2')
+
+        title = _('Create bulk translations (step 1)')
+        context = self._get_template_context(form, title)
+        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create.html', context)
+
+    @method_decorator(staff_member_required)
+    def translate_in_bulk_step_2(self, request):
+        session = request.session
+        if session.get('bulk_translation_step') not in (1, 2) or not(session.get('translation_request_pk')):
+            raise Http404()
+        session['bulk_translation_step'] = 2
+
+        translation_request = get_object_or_404(TranslationRequest.objects, pk=session['translation_request_pk'])
+        form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
+        if form.is_valid():
+            form.save()
+            session.pop('translation_request_pk')
+            session.pop('bulk_translation_step')
+            prepare_translation_bulk_request.delay(translation_request.pk)
+
+            message = _('Bulk is being processed in background. Please check the status in a few moments.')
+            self.message_user(request, message)
+            return redirect('admin:djangocms_translations_translationrequest_changelist')
+
+        title = _('Create bulk translations (step 2)')
+        context = self._get_template_context(form, title, translation_request=translation_request)
+        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
+
     def get_urls(self):
         return [
+            url(
+                r'translate-in-bulk-step-1/$',
+                self.translate_in_bulk_step_1,
+                name='translate-in-bulk-step-1',
+            ),
+            url(
+                r'translate-in-bulk-step-2/$',
+                self.translate_in_bulk_step_2,
+                name='translate-in-bulk-step-2',
+            ),
             url(
                 r'add/$',
                 views.CreateTranslationRequestView.as_view(),

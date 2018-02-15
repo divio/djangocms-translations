@@ -6,6 +6,8 @@ import sys
 
 import dj_database_url
 
+from tests.celery import app  # noqa
+
 
 class DisableMigrations(dict):
     def __contains__(self, item):
@@ -30,8 +32,8 @@ HELPER_SETTINGS = {
         env='DJANGOCMS_TRANSLATIONS_DATABASE_URL',
         default='postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations'
     )},
-
     'INSTALLED_APPS': [
+        'celery',
     ],
     'ALLOWED_HOSTS': [
         'localhost'
@@ -47,7 +49,7 @@ HELPER_SETTINGS = {
                 'name': 'Brazilian Portugues',
             },
             {
-                'code': 'ch-de',
+                'code': 'de',
                 'name': 'Deutsch',
             },
         ],
@@ -56,21 +58,23 @@ HELPER_SETTINGS = {
     'LANGUAGES': [
         ('en', 'English'),
         ('pt-br', 'Brazilian Portugues'),
-        ('ch-de', 'Deutsch'),
+        ('de', 'Deutsch'),
     ],
-    'CMS_TEMPLATES': (
-        ('test_fullwidth.html', 'Fullwidth'),
-        ('test_page.html', 'Normal page'),
-    ),
     'SITE_ID': 1,
     'DJANGOCMS_TRANSLATIONS_CONF': {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
         'DummyLinkPlugin': {'text_field_child_label': 'label'},
     },
+    'CELERY_EAGER_PROPAGATES_EXCEPTIONS': True,
+    'CELERY_ALWAYS_EAGER': True,
 }
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
     HELPER_SETTINGS['INSTALLED_APPS'].append('tests')
+    HELPER_SETTINGS['CMS_TEMPLATES'] = (
+        ('test_fullwidth.html', 'Fullwidth'),
+        ('test_page.html', 'Normal page'),
+    )
 
 
 def run():

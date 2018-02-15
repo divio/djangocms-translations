@@ -1,0 +1,133 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block content %}
+    <style type="text/css">
+        form .pages-list label {
+            text-transform: none !important;
+        }
+        form .pages-list > ul {
+            padding-left: 0;
+            padding-right: 0;
+            margin-top: 2px !important;
+            border: none !important;
+        }
+        form .pages-list > ul > li {
+            padding: 0 !important;
+            border: none !important;
+        }
+        form .pages-list > label,
+        form .pages-list > ul > li > label {
+            display: -webkit-box !important;
+            display: -ms-flexbox !important;
+            display: flex !important;
+            padding: 7px 10px 6px !important;
+            -webkit-box-align: center;
+                -ms-flex-align: center;
+                    align-items: center;
+            margin: 0;
+            width: 100%;
+        }
+        form .pages-list > label input,
+        form .pages-list > ul > li > label input {
+            position: static !important;
+            margin: 0 10px 0 0 !important;
+        }
+        form .pages-list > ul > li > label a {
+            display: none;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        form .pages-list > ul > li > label a + a {
+            margin-left: 10px;
+        }
+        form .pages-list > ul > li > label:hover a {
+            display: block;
+        }
+        form .pages-list > ul > li > label.checked {
+            background-color: rgba(0, 187, 244, 0.2);
+        }
+        form .pages-list > label:hover,
+        form .pages-list > ul > li > label:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    {% if errors %}
+        <p class="errornote">
+        {% blocktrans count errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+        {% for error in adminform.non_field_errors %}
+            <br>{{ error|safe }}
+        {% endfor %}
+        </p>
+
+    {% endif %}
+
+    <p>
+        Source language: {{ translation_request.get_source_language_display }} <br>
+        Target language: {{ translation_request.get_target_language_display }} <br>
+        Provider backend: {{ translation_request.get_provider_backend_display }} <br>
+    </p>
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                {% for field in adminform %}
+                    <div class="form-row">
+                        <div{% if field.errors %} class="errors"{% endif %}>
+                            {% for error in field.errors %}
+                                {{ error|safe }}
+                            {% endfor %}
+                            <div class="pages-list">
+                                <h2>{{ field.label }}</h2>
+                                <label><input id="select-all" type="checkbox"> Select all</label>
+                                {{ field }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div class="submit-row">
+            <input type="submit" value="{% trans "Create" %}" class="default" name="create">
+        </div>
+    </form>
+    <script type="text/javascript">
+        (function () {
+            var selectAll = document.querySelector('#select-all');
+            var checkboxes = document.querySelectorAll('.pages-list ul input[type=checkbox]');
+            var checkboxesArray = Array.prototype.slice.call(checkboxes);
+            var isEveryCheckboxChecked = function (checkboxes) {
+                return checkboxes.every(function (checkbox) {
+                    return checkbox.checked;
+                });
+            }
+
+            selectAll.addEventListener('change', function (e) {
+                if (this.checked) {
+                    checkboxesArray.forEach(function (checkbox) {
+                        checkbox.checked = true;
+                        checkbox.parentNode.className = 'checked'
+                    });
+                } else {
+                    checkboxesArray.forEach(function (checkbox) {
+                        checkbox.checked = false;
+                        checkbox.parentNode.className = ''
+                    });
+                }
+            });
+
+            checkboxesArray.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    if (!this.checked) {
+                        selectAll.checked = false;
+                        this.parentNode.className = ''
+                    } else {
+                        this.parentNode.className = 'checked'
+                        if (isEveryCheckboxChecked(checkboxesArray)) {
+                            selectAll.checked = true;
+                        }
+                    }
+                });
+            });
+        }());
+    </script>
+{% endblock %}

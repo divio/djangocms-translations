@@ -1,5 +1,5 @@
 import json
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -54,13 +54,17 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         )
 
     def make_request(self, method, section, **kwargs):
-        return requests.request(
+        response = requests.request(
             method=method,
             url=self.get_url(section),
             headers=self.get_headers(),
             auth=self.get_auth(),
             **kwargs
         )
+
+        if not response.ok:
+            raise SupertextException(response.content)
+        return response
 
     def get_export_data(self):
         data = {
@@ -96,7 +100,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
                 if items:
                     groups.append({
-                        'GroupId': '{}:{}'.format(placeholder['placeholder'], raw_plugin['pk']),
+                        'GroupId': '{}:{}:{}'.format(
+                            placeholder['translation_request_item_pk'], placeholder['placeholder'], raw_plugin['pk']
+                        ),
                         'Items': items
                     })
 
@@ -109,38 +115,43 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         import_content = json.loads(request.order.response_content)
         subplugins_already_processed = set()
 
-        # convert it to a format which is easier to work with
-        export_content = {
-            placeholder['placeholder']: OrderedDict(
-                (plugin['pk'], plugin)
-                for plugin in placeholder['plugins']
-            )
-            for placeholder in export_content
-        }
+        # TLRD: data is like {translation_request_item_pk: {placeholder_name: {plugin_pk: plugin_dict}}}
+        data = defaultdict(dict)
+        for x in export_content:
+            translation_request_item_pk = x['translation_request_item_pk']
+            plugin_dict = OrderedDict((plugin['pk'], plugin) for plugin in x['plugins'])
+            data[translation_request_item_pk][x['placeholder']] = plugin_dict
 
         for group in import_content['Groups']:
-            placeholder, plugin_id = group['GroupId'].rsplit(':', 1)
+            translation_request_item_pk, placeholder, plugin_id = group['GroupId'].split(':')
+            translation_request_item_pk = int(translation_request_item_pk)
             plugin_id = int(plugin_id)
 
             if plugin_id in subplugins_already_processed:
                 continue
 
             for item in group['Items']:
-                plugin = export_content[placeholder][plugin_id]
+                plugin_dict = data[translation_request_item_pk][placeholder]
+                plugin = plugin_dict[plugin_id]
                 plugin['data'][item['Id']] = item['Content']
                 subplugins = _set_translation_import_content(item['Content'], plugin)
                 subplugins_already_processed.update(list(subplugins.keys()))
                 for subplugin_id, subplugin_content in subplugins.items():
-                    field = get_text_field_child_label(export_content[placeholder][subplugin_id]['plugin_type'])
+                    field = get_text_field_child_label(plugin_dict[subplugin_id]['plugin_type'])
                     if field:
-                        export_content[placeholder][subplugin_id]['data'][field] = subplugin_content
+                        plugin_dict[subplugin_id]['data'][field] = subplugin_content
 
-        # convert back into djangocms-transfer format
-        data = json.dumps([{
-            'placeholder': p,
-            'plugins': list(plugins.values()),
-        } for p, plugins in export_content.items()])
-        return json.loads(data, object_hook=_object_version_data_hook)
+        # TLRD: return_data is like {translation_request_item_pk: [<djangocms_transfer.ArchivedPlaceholder>, ]}
+        return_data = {}
+        for translation_request_item_pk, placeholders_dict in data.items():
+            data = json.dumps([{
+                'placeholder': p,
+                'plugins': list(plugins.values()),
+            } for p, plugins in placeholders_dict.items()])
+            archived_placeholders = json.loads(data, object_hook=_object_version_data_hook)
+            return_data[translation_request_item_pk] = archived_placeholders
+
+        return return_data
 
     def get_quote(self):
         self.request.request_content = self.get_export_data()
@@ -150,8 +161,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             section='v1/translation/quote',
             json=self.request.request_content,
         )
-        if not response.ok:
-            raise SupertextException(response.content)
         return response.json()
 
     def send_request(self):
@@ -164,7 +173,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         data.update({
             'OrderName': 'djangocms-translations order #{}'.format(request.pk),
             'ReferenceData': request.pk,  # TODO: we should add a secret token here and then recheck when importing.
-            'SystemName': request.source_cms_page.site.name,
             'ComponentName': 'djangocms-translations',
             'ComponentVersion': djangocms_translations_version,
             'CallbackUrl': callback_url,
@@ -185,8 +193,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         order.provider_details = response.json()
         order.save(update_fields=('provider_details',))
-        if not response.ok:
-            raise SupertextException(response.content)
         return response.json()
 
     def check_status(self):
@@ -196,7 +202,4 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             section='v1/translation/order/{}'.format(order.provider_details['Id']),
             json=order.request_content,
         )
-
-        if not response.ok:
-            raise SupertextException(response.content)
         return response.json()
