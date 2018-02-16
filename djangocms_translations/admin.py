@@ -227,9 +227,9 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             session['translation_request_pk'] = translation_request.pk
             return redirect('admin:translate-in-bulk-step-2')
 
-        title = _('Create bulk translations (step 1)')
+        title = _('Create bulk translations')
         context = self._get_template_context(form, title)
-        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create.html', context)
+        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_1.html', context)
 
     @method_decorator(staff_member_required)
     def translate_in_bulk_step_2(self, request):
@@ -254,6 +254,19 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         context = self._get_template_context(form, title, translation_request=translation_request)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
 
+    @method_decorator(staff_member_required)
+    def translate_in_bulk_back(self, request):
+        session = request.session
+
+        if session.get('bulk_translation_step') != 2 or not(session.get('translation_request_pk')):
+            raise Http404()
+
+        translation_request = get_object_or_404(TranslationRequest.objects, pk=session['translation_request_pk'])
+        translation_request.delete()  # Avoid keeping the stale translation request.
+
+        session['bulk_translation_step'] = 1
+        return redirect('admin:translate-in-bulk-step-1')
+
     def get_urls(self):
         return [
             url(
@@ -265,6 +278,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 r'translate-in-bulk-step-2/$',
                 self.translate_in_bulk_step_2,
                 name='translate-in-bulk-step-2',
+            ),
+            url(
+                r'translate-in-bulk-back/$',
+                self.translate_in_bulk_back,
+                name='translate-in-bulk-back',
             ),
             url(
                 r'add/$',
