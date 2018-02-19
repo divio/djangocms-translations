@@ -9,6 +9,16 @@ from cms.models import Page
 from . import models
 
 
+def _get_bulk_request_eligible_pages(source_language, target_language):
+    return (
+        Page.objects
+        .drafts()
+        .filter(node__site=settings.SITE_ID)
+        .filter(title_set__language__in=[source_language])
+        .filter(title_set__language__in=[target_language])
+    )
+
+
 class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
     widget = forms.CheckboxSelectMultiple
     INDENT = 8
@@ -88,6 +98,19 @@ class TranslateInBulkStep1Form(forms.ModelForm):
         self.user = kwargs.pop('user')
         super(TranslateInBulkStep1Form, self).__init__(*args, **kwargs)
 
+    def clean(self, *args, **kwargs):
+        super(TranslateInBulkStep1Form, self).clean(*args, **kwargs)
+        if not self.is_valid():
+            return
+
+        eligible_pages = _get_bulk_request_eligible_pages(
+            self.cleaned_data['source_language'], self.cleaned_data['target_language']
+        )
+        if not eligible_pages.exists():
+            raise forms.ValidationError('No eligible pages found for this configuration.')
+
+        return self.cleaned_data
+
     def save(self, *args, **kwargs):
         self.instance.user = self.user
         return super(TranslateInBulkStep1Form, self).save(*args, **kwargs)
@@ -106,10 +129,7 @@ class TranslateInBulkStep2Form(forms.Form):
         pages_field.source_language = self.translation_request.source_language
         pages_field.target_language = self.translation_request.target_language
         pages_field.queryset = (
-            pages_field.queryset
-            .filter(node__site=settings.SITE_ID)
-            .filter(title_set__language__in=[pages_field.source_language])
-            .filter(title_set__language__in=[pages_field.target_language])
+            _get_bulk_request_eligible_pages(pages_field.source_language, pages_field.target_language)
             .order_by('node__path')
             .select_related('node')
         )

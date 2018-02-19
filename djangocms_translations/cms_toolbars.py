@@ -25,7 +25,7 @@ class TranslationsToolbar(CMSToolbar):
         menu.add_sideframe_item(_('Overview'), url=overview_url)
 
         bulk_translate_url = reverse('admin:translate-in-bulk-step-1')
-        menu.add_sideframe_item(_('Translate in bulk'), url=bulk_translate_url)
+        menu.add_modal_item(_('Translate in bulk'), url=bulk_translate_url)
 
         current_language = get_language_from_request(self.request)
         base_url = (
