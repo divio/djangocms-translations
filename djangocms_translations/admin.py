@@ -248,8 +248,6 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             session.pop('bulk_translation_step')
             prepare_translation_bulk_request.delay(translation_request.pk)
 
-            message = _('Bulk is being processed in background. Please check the status in a few moments.')
-            self.message_user(request, message)
             return redirect('admin:djangocms_translations_translationrequest_changelist')
 
         title = _('Create bulk translations (step 2)')
