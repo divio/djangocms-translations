@@ -2,6 +2,12 @@ CHANGELOG
 =========
 
 
+1.1.3 (2018-02-22)
+------------------
+
+* Avoid multiple form submissions when choosing a quote
+
+
 1.1.2 (2018-02-19)
 ------------------
 
