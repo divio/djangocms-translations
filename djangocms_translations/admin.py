@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
+from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
@@ -157,7 +158,14 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     )
 
     def _get_language_info(self, lang_code):
-        return get_language_info(lang_code)['name']
+        info = get_language_info(lang_code)
+        if info['code'] == lang_code:
+            return info['name']
+        try:
+            return dict(settings.LANGUAGES)[lang_code]
+        except KeyError:
+            # fallback to known name
+            return info['name']
 
     def pretty_source_language(self, obj):
         return self._get_language_info(obj.source_language)
