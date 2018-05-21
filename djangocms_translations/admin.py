@@ -5,16 +5,16 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.urlresolvers import reverse
-from django.db.models import ManyToOneRel
+from django.db.models import Count, ManyToOneRel
 from django.http import HttpResponseNotFound, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
-from django.utils.html import escape
+from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
-from cms.models import CMSPlugin
+from cms.models import CMSPlugin, Title
 from cms.operations import ADD_PLUGIN
 from cms.plugin_pool import plugin_pool
 
@@ -117,6 +117,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     list_filter = ('state',)
     list_display = (
         'date_created',
+        'pages_sent',
         'pretty_source_language',
         'pretty_target_language',
         'status',
@@ -156,6 +157,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'selected_quote',
     )
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            _pages_sent=Count('items'),
+        )
+
     def _get_language_info(self, lang_code):
         return get_language_info(lang_code)['name']
 
@@ -183,6 +189,17 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         return pretty_json(json.dumps(obj.request_content))
     pretty_request_content.short_description = _('Request content')
 
+    def pages_sent(self, obj):
+        return format_html(
+            '<a href="{url}">{title}</a>',
+            url=reverse(
+                'admin:translation-request-pages-sent',
+                args=(obj.pk,),
+            ),
+            title=obj._pages_sent,
+        )
+    pages_sent.short_description = _('Pages sent')
+
     def action(self, obj):
         def render_action(url, title):
             return mark_safe(
@@ -202,17 +219,21 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     def _get_template_context(self, form, title, **kwargs):
         context = {
-            'adminform': form,
             'has_change_permission': True,
-            'media': self.media + form.media,
+            'media': self.media,
             'opts': self.opts,
             'root_path': reverse('admin:index'),
             'current_app': self.admin_site.name,
             'app_label': self.opts.app_label,
             'title': title,
             'original': title,
-            'errors': form.errors,
         }
+        if form is not None:
+            context.update({
+                'adminform': form,
+                'media': self.media + form.media,
+                'errors': form.errors,
+            })
         context.update(kwargs)
         return context
 
@@ -267,6 +288,27 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         session['bulk_translation_step'] = 1
         return redirect('admin:translate-in-bulk-step-1')
 
+    @method_decorator(staff_member_required)
+    def pages_sent_view(self, request, pk):
+        translation_request = get_object_or_404(TranslationRequest, pk=pk)
+
+        titles = Title.objects.filter(
+            page__translation_requests_as_source__translation_request=translation_request,
+            language=translation_request.source_language,
+        ).select_related('page')
+
+        context = self._get_template_context(
+            None,
+            _('Pages sent'),
+            object=translation_request,
+            items=titles,
+        )
+        return render(
+            request,
+            'djangocms_translations/pages_sent.html',
+            context,
+        )
+
     def get_urls(self):
         return [
             url(
@@ -313,6 +355,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 r'(?P<pk>\w+)/import-from-archive/$',
                 views.import_from_archive,
                 name='translation-request-import-from-archive',
+            ),
+            url(
+                r'(?P<pk>\w+)/pages-sent/$',
+                self.pages_sent_view,
+                name='translation-request-pages-sent',
             ),
 
             # has to be the last one
