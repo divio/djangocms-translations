@@ -1,8 +1,9 @@
 from django.conf import settings
 from django import forms
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
-from django.utils.html import escape
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 from cms.forms.fields import PageSelectFormField
 from cms.models import Page
 
@@ -27,10 +28,20 @@ class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
         source_link = obj.get_absolute_url(self.source_language)
         target_link = obj.get_absolute_url(self.target_language)
 
-        return mark_safe(
-            '{}{} '.format('&nbsp;' * (obj.node.depth - 1) * self.INDENT, escape(obj)) +
-            '<a href="{}" target="_blank">{}</a> '.format(source_link, self.source_language) +
-            '<a href="{}" target="_blank">{}</a> '.format(target_link, self.target_language)
+        return format_html(
+            '<span data-path="{path}"></span>'
+            '{indent}{obj} '
+            '<a class="select-children">{button_label}</a>'
+            '<a href="{source_link}" target="_blank">{source_language}</a>'
+            '<a href="{target_link}" target="_blank">{target_language}</a>',
+            path=obj.node.path,
+            indent=mark_safe('&nbsp;' * (obj.node.depth - 1) * self.INDENT),
+            obj=obj,
+            button_label=_('Select with children'),
+            source_link=source_link,
+            source_language=self.source_language,
+            target_link=target_link,
+            target_language=self.target_language,
         )
 
 
