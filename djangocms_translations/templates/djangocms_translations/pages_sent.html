@@ -12,16 +12,22 @@
 {% endblock %}
 
 {% block content %}
-    <table>
-        <tr>
-            <th>{% trans 'Title' %}</th>
-            <th>{% trans 'Slug' %}</th>
-        </tr>
-        {% for item in items %}
-        <tr>
-            <td><a href="{{ item.page.get_absolute_url }}">{{ item.page }}</a></td>
-            <td>{{ item.slug }}</td>
-        </tr>
-        {% endfor %}
+<div class="results">
+    <table id="result_list">
+        <thead>
+            <tr>
+                <th>{% trans 'Title' %}</th>
+                <th>{% trans 'Slug' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td><a href="{{ item.page.get_absolute_url }}">{{ item.page }}</a></td>
+                <td>{{ item.slug }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
+</div>
 {% endblock content %}
