@@ -76,6 +76,20 @@ class TranslationRequest(models.Model):
         return self._provider
     _provider = None
 
+    @property
+    def order_name(self):
+        first_page_title = self.items.first().source_cms_page.get_page_title(
+            language=self.source_language,
+        )
+        page_ids = self.items.values_list('source_cms_page', flat=True)
+        page_ids_string = ', '.join(map(str, page_ids))
+        bulk_text = ''
+        if len(page_ids) > 1:
+            bulk_text = ' - {} pages'.format(len(page_ids))
+
+        return '{} (ID: {}{})'.format(first_page_title, page_ids_string, bulk_text)
+
+
     def set_status(self, status, commit=True):
         assert status in self.STATES.values, 'Invalid status'
         self.state = status

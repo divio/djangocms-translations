@@ -47,19 +47,36 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 
     readonly_fields = (
         'pretty_source_cms_page',
+        'source_cms_page_id',
+        'source_cms_page_slug',
         'pretty_target_cms_page',
+        'target_cms_page_id',
+        'target_cms_page_slug',
     )
     fields = readonly_fields
 
-    def _pretty_page_display(self, page):
-        return mark_safe('<a href="{}" target="_parent">{}</a>'.format(page.get_absolute_url(), escape(page)))
+    def _pretty_page_display(self, page, language):
+        return mark_safe(
+            '<a href="{}" target="_parent">{}</a>'.format(
+                page.get_absolute_url(language=language),
+                escape(page),
+            )
+        )
+
+    def source_cms_page_slug(self, obj):
+        return obj.source_cms_page.get_slug(language=obj.translation_request.source_language)
+    source_cms_page_slug.short_description = _('Source CMS Page Slug')
+
+    def target_cms_page_slug(self, obj):
+        return obj.target_language.get_slug(language=obj.translation_request.target_language)
+    target_cms_page_slug.short_description = _('Target CMS Page Slug')
 
     def pretty_source_cms_page(self, obj):
-        return self._pretty_page_display(obj.source_cms_page)
+        return self._pretty_page_display(obj.source_cms_page, obj.translation_request.source_language)
     pretty_source_cms_page.short_description = _('Source CMS Page')
 
     def pretty_target_cms_page(self, obj):
-        return self._pretty_page_display(obj.target_cms_page)
+        return self._pretty_page_display(obj.target_cms_page, obj.translation_request.target_language)
     pretty_target_cms_page.short_description = _('Target CMS Page')
 
 
@@ -116,6 +133,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     list_filter = ('state',)
     list_display = (
+        'order_name',
         'date_created',
         'pretty_source_language',
         'pretty_target_language',
@@ -124,6 +142,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     )
 
     fields = (
+        'order_name',
         'user',
         'state',
         (
@@ -144,6 +163,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     )
 
     readonly_fields = (
+        'order_name',
         'date_created',
         'date_submitted',
         'date_received',
