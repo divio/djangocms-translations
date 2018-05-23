@@ -87,8 +87,7 @@ class TranslationRequest(models.Model):
         if len(page_ids) > 1:
             bulk_text = ' - {} pages'.format(len(page_ids))
 
-        return '{} (ID: {}{})'.format(first_page_title, page_ids_string, bulk_text)
-
+        return 'Order #{} - {} (PageID: {}){}'.format(self.pk, first_page_title, page_ids_string, bulk_text)
 
     def set_status(self, status, commit=True):
         assert status in self.STATES.values, 'Invalid status'
