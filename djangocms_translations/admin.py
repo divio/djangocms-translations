@@ -90,6 +90,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     extra = 0
 
     fields = (
+        'provider_order_id',
         (
             'date_created',
             'date_translated',
@@ -101,10 +102,15 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     )
 
     readonly_fields = (
+        'provider_order_id',
         'pretty_provider_options',
         'pretty_request_content',
         'pretty_response_content',
     )
+
+    def provider_order_id(self, obj):
+        return obj.provider_details.get('Id')
+    provider_order_id.short_description = _('Provider Order ID')
 
     def pretty_provider_options(self, obj):
         return pretty_json(json.dumps(obj.provider_options))
