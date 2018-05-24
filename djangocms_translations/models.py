@@ -60,6 +60,7 @@ class TranslationRequest(models.Model):
     source_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
+    provider_order_name = models.CharField(max_length=255, blank=True)
     provider_options = JSONField(default={}, blank=True)
     export_content = JSONField(default={}, blank=True)
     request_content = JSONField(default={}, blank=True)
@@ -76,19 +77,6 @@ class TranslationRequest(models.Model):
         return self._provider
     _provider = None
 
-    @property
-    def order_name(self):
-        first_page_title = self.items.first().source_cms_page.get_page_title(
-            language=self.source_language,
-        )
-        page_ids = self.items.values_list('source_cms_page', flat=True)
-        page_ids_string = ', '.join(map(str, page_ids))
-        bulk_text = ''
-        if len(page_ids) > 1:
-            bulk_text = ' - {} pages'.format(len(page_ids))
-
-        return 'Order #{} - {} (PageID: {}){}'.format(self.pk, first_page_title, page_ids_string, bulk_text)
-
     def set_status(self, status, commit=True):
         assert status in self.STATES.values, 'Invalid status'
         self.state = status
@@ -96,6 +84,19 @@ class TranslationRequest(models.Model):
         if commit:
             self.save(update_fields=('state',))
         return not status == self.STATES.IMPORT_FAILED
+
+    def set_provider_order_name(self):
+        first_page_title = self.items.first().source_cms_page.get_page_title(
+            language=self.source_language,
+        )
+        bulk_text = ''
+        request_item_count = self.items.count()
+        if request_item_count > 1:
+            bulk_text = ' - {} pages'.format(request_item_count)
+
+        order_name = 'Order #{} - {}{}'.format(self.pk, first_page_title, bulk_text)
+        self.provider_order_name = order_name
+        self.save(update_fields=('provider_order_name',))
 
     def export_content_from_cms(self):
         export_content = []

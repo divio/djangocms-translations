@@ -139,7 +139,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     list_filter = ('state',)
     list_display = (
-        'order_name',
+        'provider_order_name',
         'date_created',
         'pretty_source_language',
         'pretty_target_language',
@@ -148,7 +148,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     )
 
     fields = (
-        'order_name',
+        'provider_order_name',
         'user',
         'state',
         (
@@ -169,7 +169,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     )
 
     readonly_fields = (
-        'order_name',
+        'provider_order_name',
         'date_created',
         'date_submitted',
         'date_received',
