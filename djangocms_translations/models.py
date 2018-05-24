@@ -136,6 +136,10 @@ class TranslationRequest(models.Model):
 
         self.set_status(self.STATES.PENDING_APPROVAL)
 
+    def set_request_content(self):
+        self.request_content = self.provider.get_export_data()
+        self.save(update_fields=('request_content',))
+
     def submit_request(self):
         response = self.provider.send_request()
         self.set_status(self.STATES.IN_TRANSLATION)

@@ -311,7 +311,8 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             form.save()
             session.pop('translation_request_pk')
             session.pop('bulk_translation_step')
-            prepare_translation_bulk_request.delay(translation_request.pk)
+            if 'send-without-quote' not in request.POST.keys():
+                prepare_translation_bulk_request.delay(translation_request.pk)
 
             return redirect('admin:djangocms_translations_translationrequest_changelist')
 

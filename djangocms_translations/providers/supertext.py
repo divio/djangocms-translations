@@ -179,7 +179,15 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             'CallbackUrl': callback_url,
         })
 
-        data.update(request.selected_quote.provider_options)
+        if request.selected_quote:
+            data.update(request.selected_quote.provider_options)
+        else:
+            # send without quote
+            data.update({
+                'OrderTypeId': 8,  # Specialist Translation
+                'DeliveryId': 4,  # 3 days
+                'AdditionalInformation': 'Order without Quote',
+            })
 
         order = TranslationOrder.objects.create(
             request=request,
