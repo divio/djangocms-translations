@@ -105,6 +105,10 @@ class TranslationRequest(models.Model):
         self.save(update_fields=('export_content',))
         self.set_status(self.STATES.OPEN)
 
+    def set_provider_options(self, **kwargs):
+        self.provider_options = self.provider.get_provider_options(**kwargs)
+        self.save(update_fields=('provider_options',))
+
     def get_quote_from_provider(self):
         self.set_status(self.STATES.PENDING_QUOTE)
 
@@ -328,6 +332,14 @@ class TranslationOrder(models.Model):
     response_content = JSONField(default={}, blank=True)
 
     provider_details = JSONField(default={}, blank=True)
+
+    @property
+    def price_with_currency(self):
+        price = self.provider_details.get(self.request.provider.PRICE_KEY)
+        if not price:
+            return '-'
+        currency = self.provider_details.get(self.request.provider.CURRENCY_KEY)
+        return '{} {}'.format(price, currency)
 
 
 class ArchivedPlaceholder(models.Model):

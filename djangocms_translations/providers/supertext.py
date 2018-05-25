@@ -3,9 +3,11 @@ from collections import OrderedDict, defaultdict
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.utils.translation import ugettext_lazy as _
 
 import requests
 
+from extended_choices import Choices
 from djangocms_transfer.forms import _object_version_data_hook
 from djangocms_transfer.utils import get_plugin_class
 
@@ -40,6 +42,20 @@ class SupertextException(ProviderException):
 class SupertextTranslationProvider(BaseTranslationProvider):
     API_LIVE_URL = 'https://www.supertext.ch/api/'
     API_STAGE_URL = 'https://dev.supertext.ch/api/'
+    ORDER_TYPE_CHOICES = Choices(
+        ('TRANSLATION', 6, _('Translation')),
+        ('SPECIALIST_TRANSLATION', 8, _('Specialist Translation')),
+        ('TRANSCREATION', 9, _('Transcreation')),
+    )
+    DELIVERY_TIME_CHOICES = Choices(
+        ('EXPRESS', 1, _('Express (6h)')),
+        ('24H', 2, _('24 hours')),
+        ('48H', 3, _('48 hours')),
+        ('3D', 4, _('3 days')),
+        ('1W', 5, _('1 week')),
+    )
+    CURRENCY_KEY = 'Currency'
+    PRICE_KEY = 'Price'
 
     def get_headers(self):
         return {
@@ -179,15 +195,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             'CallbackUrl': callback_url,
         })
 
+        data.update(request.provider_options)
         if request.selected_quote:
             data.update(request.selected_quote.provider_options)
-        else:
-            # send without quote
-            data.update({
-                'OrderTypeId': 8,  # Specialist Translation
-                'DeliveryId': 4,  # 3 days
-                'AdditionalInformation': 'Order without Quote',
-            })
 
         order = TranslationOrder.objects.create(
             request=request,
@@ -212,3 +222,23 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             json=order.request_content,
         )
         return response.json()
+
+    def get_order_type_choices(self):
+        # Supertext didnt provide any endpoint to fetch this list
+        return self.ORDER_TYPE_CHOICES
+
+    def get_delivery_time_choices(self):
+        # Supertext didnt provide any endpoint to fetch this list
+        return self.DELIVERY_TIME_CHOICES
+
+    def get_provider_options(self, **kwargs):
+        option_map = {
+            'order_type': 'OrderTypeId',
+            'delivery_time': 'DeliveryId',
+            'additional_info': 'AdditionalInformation',
+        }
+        return {
+            v: kwargs[k]
+            for k, v in option_map.items()
+            if kwargs.get(k) is not None
+        }

@@ -158,6 +158,30 @@ class TranslateInBulkStep2Form(forms.Form):
         self.translation_request.set_provider_order_name(self.cleaned_data['pages'][0])
 
 
+class TranslateInBulkStep3Form(forms.Form):
+    '''Step 3: Only for send without quote option'''
+
+    order_type = forms.ChoiceField(widget=forms.RadioSelect)
+    delivery_time = forms.ChoiceField(widget=forms.RadioSelect)
+
+    def __init__(self, *args, **kwargs):
+        self.translation_request = kwargs.pop('translation_request')
+        super(TranslateInBulkStep3Form, self).__init__(*args, **kwargs)
+        self.fields['order_type'].choices = self.translation_request.provider.get_order_type_choices()
+        self.fields['delivery_time'].choices = self.translation_request.provider.get_delivery_time_choices()
+
+    def save(self, *args, **kwargs):
+        self.translation_request.export_content_from_cms()
+        self.translation_request.set_request_content()
+        self.translation_request.set_provider_options(
+            order_type=self.cleaned_data['order_type'],
+            delivery_time=self.cleaned_data['delivery_time'],
+            additional_info='Order without Quote',
+        )
+        self.translation_request.set_status(models.TranslationRequest.STATES.READY_FOR_SUBMISSION)
+        self.translation_request.submit_request()
+
+
 class QuoteInput(RadioChoiceInput):
     def __init__(self, *args, **kwargs):
         super(QuoteInput, self).__init__(*args, **kwargs)
