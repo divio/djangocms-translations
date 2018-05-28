@@ -121,8 +121,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'pages_sent',
         'pretty_source_language',
         'pretty_target_language',
-        'status',
-        'action',
+        'pretty_status',
     )
 
     fields = (
@@ -208,22 +207,29 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         )
     pages_sent.short_description = _('Pages sent')
 
-    def action(self, obj):
+    def pretty_status(self, obj):
+        action = ''
         def render_action(url, title):
             return mark_safe(
-                '<a href="{url}">{title}</a>'
+                '<a class="button" href="{url}">{title}</a>'
                 .format(url=url, title=title)
             )
         if obj.state == models.TranslationRequest.STATES.PENDING_APPROVAL:
-            return render_action(
+            action = render_action(
                 reverse('admin:choose-translation-quote', args=(obj.pk,)),
                 _('Choose quote'),
             )
-        elif obj.state == models.TranslationRequest.STATES.IN_TRANSLATION:
-            return render_action(
-                reverse('admin:translation-request-check-status', args=(obj.pk,)),
-                _('Check Status'),
+        elif obj.state == models.TranslationRequest.STATES.IMPORT_FAILED:
+            action = render_action(
+                reverse('admin:translation-request-show-log', args=(obj.pk,)),
+                _('Log'),
             )
+        return format_html(
+            '{status} {action}',
+            status=obj.get_state_display(),
+            action=action,
+        )
+    pretty_status.short_description = _('Status')
 
     def _get_template_context(self, title, form=None, **kwargs):
         context = {
@@ -308,6 +314,19 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         context = self._get_template_context(_('Pages sent'), object=translation_request)
         return render(request, 'djangocms_translations/pages_sent.html', context)
 
+    @method_decorator(staff_member_required)
+    def show_log_view(self, request, pk):
+        translation_request = get_object_or_404(
+            TranslationRequest.objects.prefetch_related('imports'),
+            pk=pk,
+        )
+
+        context = self._get_template_context(
+            _('Error log'),
+            object=translation_request,
+        )
+        return render(request, 'djangocms_translations/log.html', context)
+
     def get_urls(self):
         return [
             url(
@@ -359,6 +378,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 r'(?P<pk>\w+)/pages-sent/$',
                 self.pages_sent_view,
                 name='translation-request-pages-sent',
+            ),
+            url(
+                r'(?P<pk>\w+)/log/$',
+                self.show_log_view,
+                name='translation-request-show-log',
             ),
 
             # has to be the last one
