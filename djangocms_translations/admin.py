@@ -5,7 +5,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.urlresolvers import reverse
-from django.db.models import Count, ManyToOneRel
+from django.db.models import Count, ManyToOneRel, Prefetch
 from django.http import HttpResponseNotFound, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
@@ -217,7 +217,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 _('Check Status'),
             )
 
-    def _get_template_context(self, form, title, **kwargs):
+    def _get_template_context(self, title, form=None, **kwargs):
         context = {
             'has_change_permission': True,
             'media': self.media,
@@ -251,7 +251,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             return redirect('admin:translate-in-bulk-step-2')
 
         title = _('Create bulk translations')
-        context = self._get_template_context(form, title)
+        context = self._get_template_context(title, form)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_1.html', context)
 
     @method_decorator(staff_member_required)
@@ -272,7 +272,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             return redirect('admin:djangocms_translations_translationrequest_changelist')
 
         title = _('Create bulk translations (step 2)')
-        context = self._get_template_context(form, title, translation_request=translation_request)
+        context = self._get_template_context(title, form, translation_request=translation_request)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
 
     @method_decorator(staff_member_required)
@@ -290,24 +290,15 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     @method_decorator(staff_member_required)
     def pages_sent_view(self, request, pk):
-        translation_request = get_object_or_404(TranslationRequest, pk=pk)
-
-        titles = Title.objects.filter(
-            page__translation_requests_as_source__translation_request=translation_request,
-            language=translation_request.source_language,
-        ).select_related('page')
-
-        context = self._get_template_context(
-            None,
-            _('Pages sent'),
-            object=translation_request,
-            items=titles,
+        translation_request = get_object_or_404(
+            TranslationRequest.objects.prefetch_related(
+                Prefetch('items', queryset=models.TranslationRequestItem.objects.select_related('source_cms_page')),
+            ),
+            pk=pk,
         )
-        return render(
-            request,
-            'djangocms_translations/pages_sent.html',
-            context,
-        )
+
+        context = self._get_template_context(_('Pages sent'), object=translation_request)
+        return render(request, 'djangocms_translations/pages_sent.html', context)
 
     def get_urls(self):
         return [
