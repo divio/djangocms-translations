@@ -50,6 +50,9 @@
         form .pages-list > ul > li > label:hover {
             background-color: rgba(0, 0, 0, 0.1);
         }
+        form .pages-list > ul > li > label a.select-children {
+            color: #666;
+        }
     </style>
     {% if errors %}
         <p class="errornote">
@@ -92,43 +95,63 @@
         </div>
     </form>
     <script type="text/javascript">
-        (function () {
-            var selectAll = document.querySelector('#select-all');
-            var checkboxes = document.querySelectorAll('.pages-list ul input[type=checkbox]');
-            var checkboxesArray = Array.prototype.slice.call(checkboxes);
-            var isEveryCheckboxChecked = function (checkboxes) {
-                return checkboxes.every(function (checkbox) {
-                    return checkbox.checked;
-                });
-            }
-
-            selectAll.addEventListener('change', function (e) {
-                if (this.checked) {
-                    checkboxesArray.forEach(function (checkbox) {
-                        checkbox.checked = true;
-                        checkbox.parentNode.className = 'checked'
-                    });
-                } else {
-                    checkboxesArray.forEach(function (checkbox) {
-                        checkbox.checked = false;
-                        checkbox.parentNode.className = ''
+        (function ($) {
+            $(document).ready(function() {
+                var selectAll = document.querySelector('#select-all');
+                var checkboxes = document.querySelectorAll('.pages-list ul input[type=checkbox]');
+                var selectChildrenLinks = document.querySelectorAll('.pages-list ul a.select-children');
+                var checkboxesArray = Array.prototype.slice.call(checkboxes);
+                var isEveryCheckboxChecked = function (checkboxes) {
+                    return checkboxes.every(function (checkbox) {
+                        return checkbox.checked;
                     });
                 }
-            });
 
-            checkboxesArray.forEach(function (checkbox) {
-                checkbox.addEventListener('change', function () {
-                    if (!this.checked) {
-                        selectAll.checked = false;
-                        this.parentNode.className = ''
+                selectAll.addEventListener('change', function (e) {
+                    if (this.checked) {
+                        checkboxesArray.forEach(function (checkbox) {
+                            checkbox.checked = true;
+                            checkbox.parentNode.className = 'checked'
+                        });
                     } else {
-                        this.parentNode.className = 'checked'
+                        checkboxesArray.forEach(function (checkbox) {
+                            checkbox.checked = false;
+                            checkbox.parentNode.className = ''
+                        });
+                    }
+                });
+
+                checkboxesArray.forEach(function (checkbox) {
+                    checkbox.addEventListener('change', function () {
+                        if (!this.checked) {
+                            selectAll.checked = false;
+                            this.parentNode.className = ''
+                        } else {
+                            this.parentNode.className = 'checked'
+                            if (isEveryCheckboxChecked(checkboxesArray)) {
+                                selectAll.checked = true;
+                            }
+                        }
+                    });
+                });
+
+                selectChildrenLinks.forEach(function (link) {
+                    var pathElement = $(link).parent().find('[data-path]');
+                    var matchingPath = $('.pages-list ul [data-path^=' + pathElement.attr('data-path') + ']');
+                    if (matchingPath.length < 2) {
+                        $(link).remove();
+                    };
+                    link.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        matchingPath.each(function(i, element) {
+                            $(element).parent().find('input').prop('checked', true);
+                        });
                         if (isEveryCheckboxChecked(checkboxesArray)) {
                             selectAll.checked = true;
                         }
-                    }
+                    });
                 });
             });
-        }());
+        })(django.jQuery);
     </script>
 {% endblock %}
