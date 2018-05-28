@@ -1,0 +1,33 @@
+{% extends "djangocms_translations/base.html" %}
+{% load i18n admin_urls cms_tags %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst|escape }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+    &rsaquo; {% trans 'Pages sent' %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="results">
+    <table id="result_list">
+        <thead>
+            <tr>
+                <th>{% trans 'Title' %}</th>
+                <th>{% trans 'Slug' %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in object.items.all %}
+            <tr class="{% cycle 'row1' 'row2' %}">
+                <td><a href="{{ item.source_cms_page.get_absolute_url }}">{{ item.source_cms_page }}</a></td>
+                <td>{{ item.source_cms_page.get_slug }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}
