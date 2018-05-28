@@ -290,9 +290,13 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     @method_decorator(staff_member_required)
     def pages_sent_view(self, request, pk):
+        items = models.TranslationRequestItem.objects.select_related('source_cms_page')
         translation_request = get_object_or_404(
             TranslationRequest.objects.prefetch_related(
-                Prefetch('items', queryset=models.TranslationRequestItem.objects.select_related('source_cms_page')),
+                Prefetch(
+                    'items',
+                    queryset=items,
+                ),
             ),
             pk=pk,
         )
