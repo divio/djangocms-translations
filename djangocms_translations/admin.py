@@ -293,14 +293,10 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         items = models.TranslationRequestItem.objects.select_related('source_cms_page')
         translation_request = get_object_or_404(
             TranslationRequest.objects.prefetch_related(
-                Prefetch(
-                    'items',
-                    queryset=items,
-                ),
+                Prefetch('items', queryset=items),
             ),
             pk=pk,
         )
-
         context = self._get_template_context(_('Pages sent'), object=translation_request)
         return render(request, 'djangocms_translations/pages_sent.html', context)
 
