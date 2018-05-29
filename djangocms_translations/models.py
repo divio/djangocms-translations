@@ -85,17 +85,15 @@ class TranslationRequest(models.Model):
             self.save(update_fields=('state',))
         return not status == self.STATES.IMPORT_FAILED
 
-    def set_provider_order_name(self):
-        first_page_title = self.items.first().source_cms_page.get_page_title(
-            language=self.source_language,
-        )
-        bulk_text = ''
+    def set_provider_order_name(self, source_page):
+        initial_page_title = source_page.get_page_title(self.source_language)
         request_item_count = self.items.count()
+
         if request_item_count > 1:
             bulk_text = ' - {} pages'.format(request_item_count)
-
-        order_name = 'Order #{} - {}{}'.format(self.pk, first_page_title, bulk_text)
-        self.provider_order_name = order_name
+        else:
+            bulk_text = ''
+        self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
         self.save(update_fields=('provider_order_name',))
 
     def export_content_from_cms(self):

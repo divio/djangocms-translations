@@ -55,6 +55,10 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
     )
     fields = readonly_fields
 
+    def get_queryset(self, request):
+        queryset = super(TranslationRequestItemInline, self).get_queryset(request)
+        return queryset.select_related('translation_request')
+
     def _pretty_page_display(self, page, language):
         return mark_safe(
             '<a href="{}" target="_parent">{}</a>'.format(

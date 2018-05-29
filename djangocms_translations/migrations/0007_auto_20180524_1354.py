@@ -26,6 +26,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(
             generate_provider_order_names,
-            lambda *args, **kwargs: None,
+            migrations.RunPython.noop,
         ),
     ]

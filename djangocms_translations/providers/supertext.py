@@ -167,7 +167,6 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         from djangocms_translations.models import TranslationOrder
 
         request = self.request
-        request.set_provider_order_name()
 
         callback_url = add_domain(reverse('admin:translation-request-provider-callback', kwargs={'pk': request.pk}))
 
