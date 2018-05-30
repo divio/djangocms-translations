@@ -138,10 +138,8 @@ class TranslationRequest(models.Model):
         self.order.save(update_fields=('state',))
 
     def import_response(self, raw_data):
+        import_state = TranslationImport.objects.create(request=self)
         self.set_status(self.STATES.IMPORT_STARTED)
-        import_state = TranslationImport.objects.create(
-            translation_request=self,
-        )
         self.order.response_content = raw_data.decode('utf-8')
         self.order.save(update_fields=('response_content',))
 
@@ -407,7 +405,7 @@ class TranslationImport(models.Model):
         ('IMPORTED', 'imported', _('Imported')),
     )
 
-    translation_request = models.ForeignKey(TranslationRequest, related_name='imports')
+    request = models.ForeignKey(TranslationRequest, related_name='imports')
     date_created = models.DateTimeField(auto_now_add=True)
     message = models.CharField(max_length=1000, blank=True)
     state = models.CharField(choices=STATES, default=STATES.STARTED, max_length=100)
