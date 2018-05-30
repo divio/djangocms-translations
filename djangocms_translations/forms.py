@@ -90,7 +90,7 @@ class CreateTranslationForm(forms.ModelForm):
             source_cms_page=self.cleaned_data['source_cms_page'],
             target_cms_page=self.cleaned_data['target_cms_page'],
         )
-
+        translation_request.set_provider_order_name(self.cleaned_data['source_cms_page'])
         return translation_request
 
 
@@ -155,6 +155,7 @@ class TranslateInBulkStep2Form(forms.Form):
             for page in self.cleaned_data['pages']
         ]
         models.TranslationRequestItem.objects.bulk_create(translation_request_items)
+        self.translation_request.set_provider_order_name(self.cleaned_data['pages'][0])
 
 
 class QuoteInput(RadioChoiceInput):

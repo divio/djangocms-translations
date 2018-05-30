@@ -60,6 +60,7 @@ class TranslationRequest(models.Model):
     source_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
+    provider_order_name = models.CharField(max_length=255, blank=True)
     provider_options = JSONField(default={}, blank=True)
     export_content = JSONField(default={}, blank=True)
     request_content = JSONField(default={}, blank=True)
@@ -83,6 +84,17 @@ class TranslationRequest(models.Model):
         if commit:
             self.save(update_fields=('state',))
         return not status == self.STATES.IMPORT_FAILED
+
+    def set_provider_order_name(self, source_page):
+        initial_page_title = source_page.get_page_title(self.source_language)
+        request_item_count = self.items.count()
+
+        if request_item_count > 1:
+            bulk_text = ' - {} pages'.format(request_item_count)
+        else:
+            bulk_text = ''
+        self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
+        self.save(update_fields=('provider_order_name',))
 
     def export_content_from_cms(self):
         export_content = []
