@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('date_created', models.DateTimeField(auto_now_add=True)),
                 ('message', models.CharField(blank=True, max_length=1000)),
                 ('state', models.CharField(choices=[('started', 'Import Started'), ('failed', 'Import Failed'), ('imported', 'Imported')], default='started', max_length=100)),
-                ('translation_request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='imports', to='djangocms_translations.TranslationRequest')),
+                ('request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='imports', to='djangocms_translations.TranslationRequest')),
             ],
         ),
     ]
