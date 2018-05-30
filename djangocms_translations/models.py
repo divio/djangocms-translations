@@ -150,6 +150,7 @@ class TranslationRequest(models.Model):
         self.order.save(update_fields=('state',))
 
     def import_response(self, raw_data):
+        import_state = TranslationImport.objects.create(request=self)
         self.set_status(self.STATES.IMPORT_STARTED)
         self.order.response_content = raw_data.decode('utf-8')
         self.order.save(update_fields=('response_content',))
@@ -157,7 +158,9 @@ class TranslationRequest(models.Model):
         try:
             import_data = self.provider.get_import_data()
         except ValueError:
-            logger.exception("Received invalid data from {}".format(self.provider_backend))
+            message = "Received invalid data from {}".format(self.provider_backend)
+            logger.exception(message)
+            import_state.set_error_message(message)
             return self.set_status(self.STATES.IMPORT_FAILED)
 
         id_item_mapping = self.items.in_bulk()
@@ -172,7 +175,9 @@ class TranslationRequest(models.Model):
                 )
             except (IntegrityError, ObjectDoesNotExist):
                 self._set_import_archive()
-                logger.exception("Failed to import plugins from {}".format(self.provider_backend))
+                message = "Failed to import plugins from {}".format(self.provider_backend)
+                logger.exception(message)
+                import_state.set_error_message(message)
                 import_error = True
 
         if import_error:
@@ -182,6 +187,8 @@ class TranslationRequest(models.Model):
         self.set_status(self.STATES.IMPORTED, commit=False)
         self.date_imported = timezone.now()
         self.save(update_fields=('date_imported', 'state'))
+        import_state.state = import_state.STATES.IMPORTED
+        import_state.save(update_fields=('state', ))
         return True
 
     def can_import_from_archive(self):
@@ -401,3 +408,21 @@ class ArchivedPlugin(models.Model):
 
     class Meta:
         default_permissions = ''
+
+
+class TranslationImport(models.Model):
+    STATES = Choices(
+        ('STARTED', 'started', _('Import Started')),
+        ('FAILED', 'failed', _('Import Failed')),
+        ('IMPORTED', 'imported', _('Imported')),
+    )
+
+    request = models.ForeignKey(TranslationRequest, related_name='imports')
+    date_created = models.DateTimeField(auto_now_add=True)
+    message = models.CharField(max_length=1000, blank=True)
+    state = models.CharField(choices=STATES, default=STATES.STARTED, max_length=100)
+
+    def set_error_message(self, message):
+        self.state = self.STATES.FAILED
+        self.message = message
+        self.save(update_fields=('state', 'message'))
