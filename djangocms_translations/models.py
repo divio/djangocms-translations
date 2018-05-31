@@ -417,7 +417,7 @@ class TranslationImport(models.Model):
         ('IMPORTED', 'imported', _('Imported')),
     )
 
-    request = models.ForeignKey(TranslationRequest, related_name='imports')
+    request = models.ForeignKey(TranslationRequest, on_delete=models.CASCADE, related_name='imports')
     date_created = models.DateTimeField(auto_now_add=True)
     message = models.CharField(max_length=1000, blank=True)
     state = models.CharField(choices=STATES, default=STATES.STARTED, max_length=100)
