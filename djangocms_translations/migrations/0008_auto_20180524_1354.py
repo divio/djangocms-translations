@@ -11,6 +11,7 @@ def generate_provider_order_names(apps, schema_editor):
 
     requests = TranslationRequest.objects.using(db_alias).filter(
         provider_order_name='',
+        order__isnull=False,
     )
     for request in requests:
         request.provider_order_name = request.order.request_content.get('OrderName')
