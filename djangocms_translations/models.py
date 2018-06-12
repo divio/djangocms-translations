@@ -96,7 +96,7 @@ class TranslationRequest(models.Model):
         self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
         self.save(update_fields=('provider_order_name',))
 
-    def export_content_from_cms(self):
+    def set_content_from_cms(self):
         export_content = []
         for item in self.items.all():
             export_content.extend(item.get_export_data(self.source_language))

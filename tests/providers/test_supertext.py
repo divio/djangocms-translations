@@ -280,7 +280,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
 
         self.provider = SupertextTranslationProvider(self.translation_request)
 
-        self.translation_request.export_content_from_cms()
+        self.translation_request.set_content_from_cms()
         self.export_content = json.loads(self.translation_request.export_content)
 
         self.expected_request_content = {

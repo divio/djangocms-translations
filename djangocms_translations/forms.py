@@ -171,7 +171,7 @@ class TranslateInBulkStep3Form(forms.Form):
         self.fields['delivery_time'].choices = self.translation_request.provider.get_delivery_time_choices()
 
     def save(self, *args, **kwargs):
-        self.translation_request.export_content_from_cms()
+        self.translation_request.set_content_from_cms()
         self.translation_request.set_request_content()
         self.translation_request.set_provider_options(
             order_type=self.cleaned_data['order_type'],
