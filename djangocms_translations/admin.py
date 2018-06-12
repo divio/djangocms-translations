@@ -320,7 +320,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
         if form.is_valid():
             form.save()
-            if 'send-without-quote' in request.POST.keys():
+            if 'send-without-quote' in request.POST:
                 return redirect('admin:translate-in-bulk-step-3')
             session.pop('translation_request_pk')
             session.pop('bulk_translation_step')
@@ -347,7 +347,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             return redirect('admin:djangocms_translations_translationrequest_changelist')
 
         title = _('Create bulk translations (step 3)')
-        context = self._get_template_context(form, title, translation_request=translation_request)
+        context = self._get_template_context(title, form, translation_request=translation_request)
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_3.html', context)
 
     @method_decorator(staff_member_required)
