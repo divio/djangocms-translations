@@ -1,0 +1,50 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+{% block content %}
+    <style type="text/css">
+        form .form-row ul,
+        form .form-row ul li {
+            border-top: 0 !important;
+            border-bottom: 0 !important;
+        }
+    </style>
+    {% if errors %}
+        <p class="errornote">
+        {% blocktrans count errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+        {% for error in adminform.non_field_errors %}
+            <br>{{ error|safe }}
+        {% endfor %}
+        </p>
+
+    {% endif %}
+
+    <p>
+        Source language: {{ translation_request.get_source_language_display }} <br>
+        Target language: {{ translation_request.get_target_language_display }} <br>
+        Provider backend: {{ translation_request.get_provider_backend_display }} <br>
+    </p>
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+            <fieldset class="module aligned">
+                {% for field in adminform %}
+                    <div class="form-row">
+                        <div{% if field.errors %} class="errors"{% endif %}>
+                            {% for error in field.errors %}
+                                {{ error|safe }}
+                            {% endfor %}
+                            <div>
+                                <h2>{{ field.label }}</h2>
+                                {{ field }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div class="submit-row">
+            <input type="submit" value="{% trans "Send" %}" class="default" name="send">
+            <a href="{% url 'admin:translate-in-bulk-back' %}" value="{% trans "Back" %}" class="button default" name="back">"{% trans "Back" %}"</a>
+        </div>
+    </form>
+{% endblock %}

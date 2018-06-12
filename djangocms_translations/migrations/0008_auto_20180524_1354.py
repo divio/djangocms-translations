@@ -20,7 +20,7 @@ def generate_provider_order_names(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('djangocms_translations', '0006_translationrequest_provider_order_name'),
+        ('djangocms_translations', '0007_translationrequest_provider_order_name'),
     ]
 
     operations = [

@@ -20,7 +20,11 @@ from cms.operations import ADD_PLUGIN
 from cms.plugin_pool import plugin_pool
 
 from . import models, views
-from .forms import TranslateInBulkStep1Form, TranslateInBulkStep2Form
+from .forms import (
+    TranslateInBulkStep1Form,
+    TranslateInBulkStep2Form,
+    TranslateInBulkStep3Form,
+)
 from .models import TranslationRequest
 from .tasks import prepare_translation_bulk_request
 from .utils import get_plugin_form, pretty_json
@@ -104,6 +108,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
         'pretty_provider_options',
         'pretty_request_content',
         'pretty_response_content',
+        'price',
     )
 
     readonly_fields = (
@@ -111,6 +116,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
         'pretty_provider_options',
         'pretty_request_content',
         'pretty_response_content',
+        'price',
     )
 
     def provider_order_id(self, obj):
@@ -132,6 +138,10 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
             data = obj.response_content
         return pretty_json(data)
     pretty_response_content.short_description = _('Response content')
+
+    def price(self, obj):
+        return obj.price_with_currency
+    price.short_description = _('Price')
 
 
 @admin.register(models.TranslationRequest)
@@ -284,8 +294,9 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     @method_decorator(staff_member_required)
     def translate_in_bulk_step_1(self, request):
         session = request.session
-        if session.get('bulk_translation_step') == 2:
-            return redirect('admin:translate-in-bulk-step-2')
+        bulk_translation_step = session.get('bulk_translation_step')
+        if bulk_translation_step in (2, 3):
+            return redirect('admin:translate-in-bulk-step-{}'.format(bulk_translation_step))
         session['bulk_translation_step'] = 1
 
         form = TranslateInBulkStep1Form(data=request.POST or None, user=request.user)
@@ -301,7 +312,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
     @method_decorator(staff_member_required)
     def translate_in_bulk_step_2(self, request):
         session = request.session
-        if session.get('bulk_translation_step') not in (1, 2) or not(session.get('translation_request_pk')):
+        if session.get('bulk_translation_step') not in range(1, 4) or not(session.get('translation_request_pk')):
             raise Http404()
         session['bulk_translation_step'] = 2
 
@@ -309,10 +320,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         form = TranslateInBulkStep2Form(data=request.POST or None, translation_request=translation_request)
         if form.is_valid():
             form.save()
+            if 'send-without-quote' in request.POST:
+                return redirect('admin:translate-in-bulk-step-3')
             session.pop('translation_request_pk')
             session.pop('bulk_translation_step')
             prepare_translation_bulk_request.delay(translation_request.pk)
-
             return redirect('admin:djangocms_translations_translationrequest_changelist')
 
         title = _('Create bulk translations (step 2)')
@@ -320,17 +332,40 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_2.html', context)
 
     @method_decorator(staff_member_required)
-    def translate_in_bulk_back(self, request):
+    def translate_in_bulk_step_3(self, request):
         session = request.session
-
-        if session.get('bulk_translation_step') != 2 or not(session.get('translation_request_pk')):
+        if session.get('bulk_translation_step') not in range(1, 4) or not(session.get('translation_request_pk')):
             raise Http404()
+        session['bulk_translation_step'] = 3
 
         translation_request = get_object_or_404(TranslationRequest.objects, pk=session['translation_request_pk'])
-        translation_request.delete()  # Avoid keeping the stale translation request.
+        form = TranslateInBulkStep3Form(data=request.POST or None, translation_request=translation_request)
+        if form.is_valid():
+            form.save()
+            session.pop('translation_request_pk')
+            session.pop('bulk_translation_step')
+            return redirect('admin:djangocms_translations_translationrequest_changelist')
 
-        session['bulk_translation_step'] = 1
-        return redirect('admin:translate-in-bulk-step-1')
+        title = _('Create bulk translations (step 3)')
+        context = self._get_template_context(title, form, translation_request=translation_request)
+        return render(request, 'admin/djangocms_translations/translationrequest/bulk_create_step_3.html', context)
+
+    @method_decorator(staff_member_required)
+    def translate_in_bulk_back(self, request):
+        session = request.session
+        bulk_translation_step = session.get('bulk_translation_step')
+
+        if bulk_translation_step not in range(2, 4) or not(session.get('translation_request_pk')):
+            raise Http404()
+
+        if bulk_translation_step == 2:
+            translation_request = get_object_or_404(TranslationRequest.objects, pk=session['translation_request_pk'])
+            translation_request.delete()  # Avoid keeping the stale translation request.
+
+        session['bulk_translation_step'] = bulk_translation_step - 1
+        return redirect(
+            'admin:translate-in-bulk-step-{}'.format(session['bulk_translation_step'])
+        )
 
     @method_decorator(staff_member_required)
     def pages_sent_view(self, request, pk):
@@ -368,6 +403,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 r'translate-in-bulk-step-2/$',
                 self.translate_in_bulk_step_2,
                 name='translate-in-bulk-step-2',
+            ),
+            url(
+                r'translate-in-bulk-step-3/$',
+                self.translate_in_bulk_step_3,
+                name='translate-in-bulk-step-3',
             ),
             url(
                 r'translate-in-bulk-back/$',

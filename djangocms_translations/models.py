@@ -96,7 +96,7 @@ class TranslationRequest(models.Model):
         self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
         self.save(update_fields=('provider_order_name',))
 
-    def export_content_from_cms(self):
+    def set_content_from_cms(self):
         export_content = []
         for item in self.items.all():
             export_content.extend(item.get_export_data(self.source_language))
@@ -104,6 +104,10 @@ class TranslationRequest(models.Model):
         self.export_content = json.dumps(export_content, cls=DjangoJSONEncoder)
         self.save(update_fields=('export_content',))
         self.set_status(self.STATES.OPEN)
+
+    def set_provider_options(self, **kwargs):
+        self.provider_options = self.provider.get_provider_options(**kwargs)
+        self.save(update_fields=('provider_options',))
 
     def get_quote_from_provider(self):
         self.set_status(self.STATES.PENDING_QUOTE)
@@ -135,6 +139,10 @@ class TranslationRequest(models.Model):
                 quotes.append(quote)
 
         self.set_status(self.STATES.PENDING_APPROVAL)
+
+    def set_request_content(self):
+        self.request_content = self.provider.get_export_data()
+        self.save(update_fields=('request_content',))
 
     def submit_request(self):
         response = self.provider.send_request()
@@ -324,6 +332,14 @@ class TranslationOrder(models.Model):
     response_content = JSONField(default={}, blank=True)
 
     provider_details = JSONField(default={}, blank=True)
+
+    @property
+    def price_with_currency(self):
+        price = self.provider_details.get(self.request.provider.PRICE_KEY)
+        if not price:
+            return '-'
+        currency = self.provider_details.get(self.request.provider.CURRENCY_KEY)
+        return '{} {}'.format(price, currency)
 
 
 class ArchivedPlaceholder(models.Model):

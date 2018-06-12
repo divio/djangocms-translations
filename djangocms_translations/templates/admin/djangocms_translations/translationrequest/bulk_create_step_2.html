@@ -90,7 +90,8 @@
             </fieldset>
         </div>
         <div class="submit-row">
-            <input type="submit" value="{% trans "Create" %}" class="default" name="create">
+            <input type="submit" value="{% trans "Send for quote" %}" class="default" name="send-quote">
+            <input type="submit" value="{% trans "Send without quote" %}" class="default" name="send-without-quote">
             <a href="{% url 'admin:translate-in-bulk-back' %}" value="{% trans "Back" %}" class="button default" name="back">"{% trans "Back" %}"</a>
         </div>
     </form>

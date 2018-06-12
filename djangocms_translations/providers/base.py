@@ -11,6 +11,9 @@ class BaseTranslationProvider(object):
     API_LIVE_URL = None
     API_STAGE_URL = None
 
+    CURRENCY_KEY = None
+    PRICE_KEY = None
+
     def __init__(self, request):
         self.request = request
 
@@ -41,4 +44,13 @@ class BaseTranslationProvider(object):
         raise NotImplementedError
 
     def get_quote(self):
+        raise NotImplementedError
+
+    def get_order_type_choices(self):
+        raise NotImplementedError
+
+    def get_delivery_time_choices(self):
+        raise NotImplementedError
+
+    def get_provider_options(self, **kwargs):
         raise NotImplementedError
