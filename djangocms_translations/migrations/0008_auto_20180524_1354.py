@@ -11,11 +11,11 @@ def generate_provider_order_names(apps, schema_editor):
 
     requests = TranslationRequest.objects.using(db_alias).filter(
         provider_order_name='',
+        order__isnull=False,
     )
     for request in requests:
-        if hasattr(request, 'order'):
-            request.provider_order_name = request.order.request_content.get('OrderName')
-            request.save(update_fields=('provider_order_name',))
+        request.provider_order_name = request.order.request_content.get('OrderName')
+        request.save(update_fields=('provider_order_name',))
 
 
 class Migration(migrations.Migration):
