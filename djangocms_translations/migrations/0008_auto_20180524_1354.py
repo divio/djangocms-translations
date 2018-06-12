@@ -13,8 +13,9 @@ def generate_provider_order_names(apps, schema_editor):
         provider_order_name='',
     )
     for request in requests:
-        request.provider_order_name = request.order.request_content.get('OrderName')
-        request.save(update_fields=('provider_order_name',))
+        if hasattr(request, 'order'):
+            request.provider_order_name = request.order.request_content.get('OrderName')
+            request.save(update_fields=('provider_order_name',))
 
 
 class Migration(migrations.Migration):
