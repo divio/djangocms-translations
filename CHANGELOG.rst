@@ -1,8 +1,12 @@
 CHANGELOG
 =========
 
+1.2.1 (2018-06-12)
+------------------
+* Fixed a bug with migration 0008 with requests without order
 
-1.2.0 (2018-02-22)
+
+1.2.0 (2018-06-12)
 ------------------
 
 * Added send without quote functionality to bulk translation requests
