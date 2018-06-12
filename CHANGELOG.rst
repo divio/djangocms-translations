@@ -2,6 +2,13 @@ CHANGELOG
 =========
 
 
+1.2.0 (unreleased)
+------------------
+
+* Added send without quote functionality to bulk translation requests
+* Added error logging
+
+
 1.1.3 (2018-02-22)
 ------------------
 
