@@ -11,6 +11,7 @@ from django.db import models
 from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
@@ -272,6 +273,10 @@ class TranslationRequestItem(models.Model):
     translation_request = models.ForeignKey(TranslationRequest, related_name='items')
     source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
     target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
+
+    @cached_property
+    def source_cms_page_title(self):
+        return self.source_cms_page.get_title(self.translation_request.source_language)
 
     def clean(self, exclude=None):
         page_languages = self.source_cms_page.get_languages()

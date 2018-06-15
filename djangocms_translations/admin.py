@@ -15,7 +15,7 @@ from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info, ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
-from cms.models import CMSPlugin, Title
+from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
 from cms.plugin_pool import plugin_pool
 
@@ -66,9 +66,9 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 
     def _pretty_page_display(self, page, language):
         return mark_safe(
-            '<a href="{}" target="_parent">{}</a>'.format(
+            '<a href="{}" target="_top" onclick="closeSideframe()">{}</a>'.format(
                 page.get_absolute_url(language=language),
-                escape(page),
+                escape(page.get_title(language)),
             )
         )
 
@@ -254,7 +254,17 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 '<a class="button" href="{url}">{title}</a>'
                 .format(url=url, title=title)
             )
-        if obj.state == models.TranslationRequest.STATES.PENDING_APPROVAL:
+        if obj.state == models.TranslationRequest.STATES.PENDING_QUOTE:
+            action = mark_safe(
+                '<a class="button" '
+                'onclick="window.top.CMS.$.post(\'{url}\', {refresh_window_callback});" '
+                'href="#">{title}</a>'.format(
+                    url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
+                    title=_('Refresh'),
+                    refresh_window_callback='function () {window.location.reload()}',
+                )
+            )
+        elif obj.state == models.TranslationRequest.STATES.PENDING_APPROVAL:
             action = render_action(
                 reverse('admin:choose-translation-quote', args=(obj.pk,)),
                 _('Choose quote'),
@@ -369,7 +379,10 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     @method_decorator(staff_member_required)
     def pages_sent_view(self, request, pk):
-        items = models.TranslationRequestItem.objects.select_related('source_cms_page')
+        items = models.TranslationRequestItem.objects.select_related(
+            'source_cms_page',
+            'translation_request',
+        )
         translation_request = get_object_or_404(
             TranslationRequest.objects.prefetch_related(
                 Prefetch('items', queryset=items),
@@ -423,6 +436,11 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 r'(?P<pk>\w+)/choose-quote/$',
                 views.ChooseTranslationQuoteView.as_view(),
                 name='choose-translation-quote',
+            ),
+            url(
+                r'(?P<pk>\w+)/get-quote-from-provider/$',
+                views.get_quote_from_provider_view,
+                name='get-quote-from-provider',
             ),
             url(
                 r'(?P<pk>\w+)/check-status/$',
