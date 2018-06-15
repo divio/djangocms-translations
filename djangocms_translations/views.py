@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
@@ -132,7 +133,12 @@ class ChooseTranslationQuoteView(UpdateView):
         return response
 
 
+@csrf_exempt
+@require_POST
 def get_quote_from_provider_view(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
     translation_request = get_object_or_404(
         TranslationRequest.objects.filter(state=TranslationRequest.STATES.PENDING_QUOTE),
         pk=pk,

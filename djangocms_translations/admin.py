@@ -257,7 +257,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         if obj.state == models.TranslationRequest.STATES.PENDING_QUOTE:
             action = mark_safe(
                 '<a class="button" '
-                'onclick="window.top.CMS.$.get(\'{url}\', {refresh_window_callback});" '
+                'onclick="window.top.CMS.$.post(\'{url}\', {refresh_window_callback});" '
                 'href="#">{title}</a>'.format(
                     url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
                     title=_('Refresh'),
