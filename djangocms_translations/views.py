@@ -132,6 +132,15 @@ class ChooseTranslationQuoteView(UpdateView):
         return response
 
 
+def get_quote_from_provider_view(request, pk):
+    translation_request = get_object_or_404(
+        TranslationRequest.objects.filter(state=TranslationRequest.STATES.PENDING_QUOTE),
+        pk=pk,
+    )
+    translation_request.get_quote_from_provider()
+    return JsonResponse({'success': True})
+
+
 class TranslationRequestStatusView(DetailView):
     template_name = 'djangocms_translations/status_detail.html'
     model = models.TranslationRequest

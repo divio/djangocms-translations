@@ -137,19 +137,66 @@
                 });
 
                 selectChildrenLinks.forEach(function (link) {
-                    var pathElement = $(link).parent().find('[data-path]');
-                    var matchingPath = $('.pages-list ul [data-path^=' + pathElement.attr('data-path') + ']');
-                    if (matchingPath.length < 2) {
+                    var path = $(link).parent().find('[data-path]').attr('data-path');
+                    var matchingPathCheckboxes = $(checkboxesArray).filter(function () {
+                        return !!this.parentNode.querySelector('span[data-path^="' + path + '"]');
+                    });
+
+                    if (matchingPathCheckboxes.length < 2) {
                         $(link).remove();
+                        return;
                     };
-                    link.addEventListener('click', function(event) {
+                    matchingPathCheckboxes.each(function (i, element) {
+                        element.addEventListener('change', function () {
+                            if (isEveryCheckboxChecked(matchingPathCheckboxes.toArray())) {
+                                link.innerText = 'Unselect with children';
+                            } else {
+                                link.innerText = 'Select with children';
+                            }
+                        });
+                    });
+                    link.addEventListener('click', function (event) {
                         event.preventDefault();
-                        matchingPath.each(function(i, element) {
-                            $(element).parent().find('input').prop('checked', true);
+
+                        var checked = true,
+                            text = 'Unselect with children';
+                        if (this.innerText.includes('Unselect')) {
+                            checked = false;
+                            text = 'Select with children';
+                        }
+
+                        matchingPathCheckboxes.each(function(i, element) {
+                            $(element).prop('checked', checked);
                         });
                         if (isEveryCheckboxChecked(checkboxesArray)) {
                             selectAll.checked = true;
+                        } else {
+                            selectAll.checked = false;
                         }
+
+                        // updating text of links for children of this node
+                        var matchingPathLinks = $('.pages-list ul a.select-children').filter(function () {
+                            return !!this.parentNode.querySelector('span[data-path^="' + path + '"]');
+                        });
+                        matchingPathLinks.each(function (i, element) {
+                            $(element).html(text);
+                        });
+
+                        // updating text of links for parents of this node
+                        var parentLinks = $('.pages-list ul a.select-children').filter(function () {
+                            return !!this.parentNode.querySelector('span[data-path^="' + path.slice(0, 4) + '"]');
+                        }).not(matchingPathLinks);
+                        parentLinks.each(function (i, link) {
+                            var path = $(link).parent().find('[data-path]').attr('data-path');
+                            var matchingParentPathCheckboxes = $('.pages-list ul input[type="checkbox"]').filter(function () {
+                                return !!this.parentNode.querySelector('span[data-path^="' + path + '"]');
+                            });
+                            if (isEveryCheckboxChecked(matchingParentPathCheckboxes.toArray())) {
+                                $(link).html('Unselect with children');
+                            } else {
+                                $(link).html('Select with children');
+                            }
+                        });
                     });
                 });
             });
