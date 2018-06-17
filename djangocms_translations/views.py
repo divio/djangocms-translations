@@ -133,7 +133,6 @@ class ChooseTranslationQuoteView(UpdateView):
         return response
 
 
-@csrf_exempt
 @require_POST
 def get_quote_from_provider_view(request, pk):
     if not request.user.is_staff:
