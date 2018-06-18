@@ -269,10 +269,12 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         if obj.state == models.TranslationRequest.STATES.PENDING_QUOTE:
             action = mark_safe(
                 '<a class="button" '
-                'onclick="window.top.CMS.$.post(\'{url}\', {refresh_window_callback});" '
-                'href="#">{title}</a>'.format(
+                'onclick="window.django.jQuery.ajax({{'
+                'method: \'POST\', headers: {headers}, url: \'{url}\', success: {refresh_window_callback}'
+                '}});" href="#">{title}</a>'.format(
                     url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
                     title=_('Refresh'),
+                    headers='{\'X-CSRFToken\': document.cookie.match(\'csrftoken=(.+);\')[1]}',
                     refresh_window_callback='function () {window.location.reload()}',
                 )
             )
