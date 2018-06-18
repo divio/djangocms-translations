@@ -1,5 +1,6 @@
-from django.conf import settings
 from django import forms
+from django.conf import settings
+from django.db.models import Q
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -11,12 +12,16 @@ from . import models
 
 
 def _get_bulk_request_eligible_pages(source_language, target_language):
-    return (
+    base_qs = (
         Page.objects
         .drafts()
         .filter(node__site=settings.SITE_ID)
         .filter(title_set__language__in=[source_language])
         .filter(title_set__language__in=[target_language])
+    )
+    return base_qs.filter(
+        Q(node__parent__in=base_qs.values_list('node', flat=True)) |
+        Q(node__parent=None)
     )
 
 
@@ -30,13 +35,13 @@ class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
 
         return format_html(
             '<span data-path="{path}"></span>'
-            '{indent}{obj} '
+            '{indent}{title} '
             '<a class="select-children">{button_label}</a>'
             '<a href="{source_link}" target="_blank">{source_language}</a>'
             '<a href="{target_link}" target="_blank">{target_language}</a>',
             path=obj.node.path,
             indent=mark_safe('&nbsp;' * (obj.node.depth - 1) * self.INDENT),
-            obj=obj,
+            title=obj.get_title(self.source_language),
             button_label=_('Select with children'),
             source_link=source_link,
             source_language=self.source_language,

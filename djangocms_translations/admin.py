@@ -49,6 +49,7 @@ class AllReadOnlyFieldsMixin(object):
 class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
     model = models.TranslationRequestItem
     extra = 0
+    classes = ['collapse']
 
     readonly_fields = (
         'pretty_source_cms_page',
@@ -92,11 +93,13 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 class TranslationQuoteInline(AllReadOnlyFieldsMixin, admin.TabularInline):
     model = models.TranslationQuote
     extra = 0
+    classes = ['collapse']
 
 
 class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     model = models.TranslationOrder
     extra = 0
+    classes = ['collapse']
 
     fields = (
         'provider_order_id',
@@ -162,25 +165,34 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         'pretty_status',
     )
 
-    fields = (
-        'provider_order_name',
-        'user',
-        'state',
-        (
-            'date_created',
-            'date_submitted',
-            'date_received',
-            'date_imported',
-        ),
-        (
-            'pretty_source_language',
-            'pretty_target_language',
-        ),
-        'provider_backend',
-        'pretty_provider_options',
-        'pretty_export_content',
-        'pretty_request_content',
-        'selected_quote',
+    fieldsets = (
+        (None, {
+            'fields':  (
+                'provider_order_name',
+                'user',
+                'state',
+                (
+                    'date_created',
+                    'date_submitted',
+                    'date_received',
+                    'date_imported',
+                ),
+                (
+                    'pretty_source_language',
+                    'pretty_target_language',
+                ),
+                'provider_backend',
+            ),
+        }),
+        (_('Additional Info'), {
+            'fields':  (
+                'pretty_provider_options',
+                'pretty_export_content',
+                'pretty_request_content',
+                'selected_quote',
+            ),
+            'classes': ('collapse',),
+        }),
     )
 
     readonly_fields = (
