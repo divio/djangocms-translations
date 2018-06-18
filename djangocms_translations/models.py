@@ -113,33 +113,33 @@ class TranslationRequest(models.Model):
     def get_quote_from_provider(self):
         self.set_status(self.STATES.PENDING_QUOTE)
 
-        # provider_quote = self.provider.get_quote()
+        provider_quote = self.provider.get_quote()
 
-        # currency = provider_quote['Currency']
-        # date_received = timezone.now()
-        # quotes = []
+        currency = provider_quote['Currency']
+        date_received = timezone.now()
+        quotes = []
 
-        # for option in provider_quote['Options']:
-        #     order_type_id = option['OrderTypeId']
-        #     name = '{} ({})'.format(option['Name'], option['ShortDescription'])
-        #     description = option['Description']
+        for option in provider_quote['Options']:
+            order_type_id = option['OrderTypeId']
+            name = '{} ({})'.format(option['Name'], option['ShortDescription'])
+            description = option['Description']
 
-        #     for delivery_option in option['DeliveryOptions']:
-        #         quote = self.quotes.create(
-        #             provider_options={
-        #                 'OrderTypeId': order_type_id,
-        #                 'DeliveryId': delivery_option['DeliveryId'],
-        #             },
-        #             name=name,
-        #             description=description,
-        #             delivery_date=delivery_option['DeliveryDate'],
-        #             price_currency=currency,
-        #             price_amount=delivery_option['Price'] or 0,
-        #             date_received=date_received,
-        #         )
-        #         quotes.append(quote)
+            for delivery_option in option['DeliveryOptions']:
+                quote = self.quotes.create(
+                    provider_options={
+                        'OrderTypeId': order_type_id,
+                        'DeliveryId': delivery_option['DeliveryId'],
+                    },
+                    name=name,
+                    description=description,
+                    delivery_date=delivery_option['DeliveryDate'],
+                    price_currency=currency,
+                    price_amount=delivery_option['Price'] or 0,
+                    date_received=date_received,
+                )
+                quotes.append(quote)
 
-        # self.set_status(self.STATES.PENDING_APPROVAL)
+        self.set_status(self.STATES.PENDING_APPROVAL)
 
     def set_request_content(self):
         self.request_content = self.provider.get_export_data()
