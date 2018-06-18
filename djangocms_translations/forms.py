@@ -15,14 +15,20 @@ def _get_bulk_request_eligible_pages(source_language, target_language):
     base_qs = (
         Page.objects
         .drafts()
+        .select_related('node')
         .filter(node__site=settings.SITE_ID)
         .filter(title_set__language__in=[source_language])
         .filter(title_set__language__in=[target_language])
     )
-    return base_qs.filter(
-        Q(node__parent__in=base_qs.values_list('node', flat=True)) |
-        Q(node__parent=None)
-    )
+    page_ids = []
+    for page in base_qs:
+        ancestors_paths = [
+            page.node.path[0:pos]
+            for pos in range(0, len(page.node.path), page.node.steplen)[1:]
+        ]
+        if set(ancestors_paths).issubset(set([page.node.path for page in base_qs])):
+            page_ids.append(page.pk)
+    return base_qs.filter(Q(pk__in=page_ids) | Q(node__depth=1))
 
 
 class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
