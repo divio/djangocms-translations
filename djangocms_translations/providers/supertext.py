@@ -199,9 +199,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         if request.selected_quote:
             data.update(request.selected_quote.provider_options)
 
-        order = TranslationOrder.objects.create(
+        order, created = TranslationOrder.objects.get_or_create(
             request=request,
-            request_content=data,
+            defaults={'request_content': data}
         )
 
         response = self.make_request(
