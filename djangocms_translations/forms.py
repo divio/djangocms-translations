@@ -1,6 +1,5 @@
 from django import forms
 from django.conf import settings
-from django.db.models import Q
 from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -15,20 +14,21 @@ def _get_bulk_request_eligible_pages(source_language, target_language):
     base_qs = (
         Page.objects
         .drafts()
-        .select_related('node')
+        .select_related('node__parent')
         .filter(node__site=settings.SITE_ID)
         .filter(title_set__language__in=[source_language])
         .filter(title_set__language__in=[target_language])
+        .order_by('node__path')
     )
-    page_ids = []
-    for page in base_qs:
-        ancestors_paths = [
-            page.node.path[0:pos]
-            for pos in range(0, len(page.node.path), page.node.steplen)[1:]
-        ]
-        if set(ancestors_paths).issubset(set([page.node.path for page in base_qs])):
-            page_ids.append(page.pk)
-    return base_qs.filter(Q(pk__in=page_ids) | Q(node__depth=1))
+    ids_by_path = {}
+    for page in base_qs.iterator():
+        parent_node = page.node.parent
+        if parent_node:
+            if parent_node.path in ids_by_path:
+                ids_by_path[page.node.path] = page.pk
+        else:
+            ids_by_path[page.node.path] = page.pk
+    return base_qs.filter(pk__in=ids_by_path.values())
 
 
 class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
