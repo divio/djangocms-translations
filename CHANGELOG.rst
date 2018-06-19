@@ -1,13 +1,21 @@
 CHANGELOG
 =========
 
+1.2.3 (2018-06-19)
+-----------------
+
+* Fixed a bug where the page tree would render incomplete
+
+
 1.2.2 (2018-06-15)
 ------------------
+
 * Cosmetic changes to translations UI
 
 
 1.2.1 (2018-06-12)
 ------------------
+
 * Fixed a bug with migration 0008 with requests without order
 
 
