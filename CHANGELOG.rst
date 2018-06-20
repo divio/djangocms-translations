@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.3.0 (unreleased)
+1.3.0 (2018-06-20)
 -----------------
 
 * Changed all supertext endpoints to use version 1.1
