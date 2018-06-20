@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.3.2 (2018-06-20)
+-----------------
+
+* Changed quotes endpoint to v1 again for supertext.
+* Changed orders endpoint to v1.1 for supertext.
+
+
 1.3.1 (2018-06-20)
 -----------------
 

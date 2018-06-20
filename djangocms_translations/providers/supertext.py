@@ -174,7 +174,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         self.request.save(update_fields=('request_content',))
         response = self.make_request(
             method='post',
-            section='v1.1/translation/quote',
+            section='v1/translation/quote',
             json=self.request.request_content,
         )
         return response.json()
@@ -207,7 +207,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         response = self.make_request(
             method='post',
-            section='v1/translation/order',
+            section='v1.1/translation/order',
             json=order.request_content,
         )
 
