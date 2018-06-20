@@ -199,6 +199,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         if request.selected_quote:
             data.update(request.selected_quote.provider_options)
 
+        # Enables retrying requests to Supertext after error from Supertext API
         order, created = TranslationOrder.objects.get_or_create(
             request=request,
             defaults={'request_content': data}
