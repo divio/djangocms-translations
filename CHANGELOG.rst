@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+1.3.1 (unreleased)
+-----------------
+
+* Changed quotes endpoint to v1.1 for supertext. All others continue as v1
+
+
 1.3.0 (2018-06-20)
 -----------------
 
