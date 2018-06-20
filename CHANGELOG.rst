@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.3.0 (unreleased)
+-----------------
+
+* Changed all supertext endpoints to use version 1.1
+* Fixed a bug preventing a translation request from being retried
+
+
 1.2.3 (2018-06-19)
 -----------------
 

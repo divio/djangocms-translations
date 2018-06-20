@@ -40,6 +40,7 @@ class SupertextException(ProviderException):
 
 
 class SupertextTranslationProvider(BaseTranslationProvider):
+    API_VERSION = 'v1'
     API_LIVE_URL = 'https://www.supertext.ch/api/'
     API_STAGE_URL = 'https://dev.supertext.ch/api/'
     ORDER_TYPE_CHOICES = Choices(
@@ -174,7 +175,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         self.request.save(update_fields=('request_content',))
         response = self.make_request(
             method='post',
-            section='v1/translation/quote',
+            section='{}/translation/quote'.format(self.API_VERSION),
             json=self.request.request_content,
         )
         return response.json()
@@ -207,7 +208,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
 
         response = self.make_request(
             method='post',
-            section='v1/translation/order',
+            section='{}/translation/order'.format(self.API_VERSION),
             json=order.request_content,
         )
 
@@ -219,7 +220,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
         order = self.request.order
         response = self.make_request(
             method='get',
-            section='v1/translation/order/{}'.format(order.provider_details['Id']),
+            section='{}/translation/order/{}'.format(self.API_VERSION, order.provider_details['Id']),
             json=order.request_content,
         )
         return response.json()
