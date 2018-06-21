@@ -14,7 +14,7 @@ from pygments import highlight
 from pygments.lexers import JsonLexer
 from pygments.formatters import HtmlFormatter
 
-from djangocms_transfer.utils import get_local_fields, get_plugin_class, get_plugin_model
+from djangocms_transfer.utils import get_plugin_class, get_plugin_model
 
 from .conf import TRANSLATIONS_CONF
 
@@ -99,7 +99,19 @@ def get_translatable_fields(plugin_type):
         fields = conf['fields']
     else:
         model = get_plugin_model(plugin_type)
-        fields = get_local_fields(model)
+
+        opts = model._meta.concrete_model._meta
+        fields = opts.local_fields
+        fields = [
+            field.name
+            for field in fields
+            if (
+                not field.is_relation
+                and not field.primary_key
+                and field.__class__.__name__ != 'BooleanField'
+            )
+        ]
+
     excluded = conf.get('excluded_fields', [])
     return set(fields).difference(set(excluded))
 
