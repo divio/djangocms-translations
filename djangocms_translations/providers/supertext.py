@@ -211,8 +211,16 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             json=order.request_content,
         )
 
-        order.provider_details = response.json()
+        try:
+            order.provider_details = response.json()[0]
+        except IndexError:
+            order.provider_details = response.json()
         order.save(update_fields=('provider_details',))
+
+        if not order.provider_order_id:
+            order.provider_order_id = order.provider_details.get('Id', '')
+            order.save(update_fields=('provider_order_id',))
+
         return response.json()
 
     def check_status(self):
