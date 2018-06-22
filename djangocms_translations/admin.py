@@ -123,7 +123,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
     )
 
     def provider_order_id(self, obj):
-        return obj.provider_details.get('Id')
+        return obj.provider_details.get('Id') or obj.response_content.get('Id')
     provider_order_id.short_description = _('Provider Order ID')
 
     def pretty_provider_options(self, obj):
@@ -274,7 +274,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 '}});" href="#">{title}</a>'.format(
                     url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
                     title=_('Refresh'),
-                    headers='{\'X-CSRFToken\': document.cookie.match(\'csrftoken=(.+);\')[1]}',
+                    headers='{\'X-CSRFToken\': document.cookie.match(/csrftoken=(\w+)(;|$)/)[1]}',
                     refresh_window_callback='function () {window.location.reload()}',
                 )
             )

@@ -210,8 +210,9 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             section='v1.1/translation/order',
             json=order.request_content,
         )
-
-        order.provider_details = response.json()
+        # Supports only SupertextAPI v1.1
+        # creating order endpoint returns list, not a json object
+        order.provider_details = response.json()[0]
         order.save(update_fields=('provider_details',))
         return response.json()
 
