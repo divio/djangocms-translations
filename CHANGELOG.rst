@@ -1,8 +1,14 @@
 CHANGELOG
 =========
 
+1.3.3 (2018-06-22)
+------------------
+
+* Fixed a bug where order ID wasn't displayed on certain operations
+
+
 1.3.2 (2018-06-20)
------------------
+------------------
 
 * Changed quotes endpoint to v1 again for supertext.
 * Changed orders endpoint to v1.1 for supertext.
