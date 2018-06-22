@@ -336,7 +336,6 @@ class TranslationOrder(models.Model):
     request_content = JSONField(default={}, blank=True)
     response_content = JSONField(default={}, blank=True)
 
-    provider_order_id = models.CharField(max_length=255, blank=True)
     provider_details = JSONField(default={}, blank=True)
 
     @property

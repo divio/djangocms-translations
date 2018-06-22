@@ -4,6 +4,7 @@ from itertools import chain
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import BooleanField
 from django.forms import modelform_factory
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
@@ -108,7 +109,7 @@ def get_translatable_fields(plugin_type):
             if (
                 not field.is_relation
                 and not field.primary_key
-                and field.__class__.__name__ != 'BooleanField'
+                and not isinstance(field, BooleanField)
             )
         ]
 

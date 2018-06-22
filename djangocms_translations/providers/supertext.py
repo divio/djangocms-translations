@@ -210,17 +210,10 @@ class SupertextTranslationProvider(BaseTranslationProvider):
             section='v1.1/translation/order',
             json=order.request_content,
         )
-
-        try:
-            order.provider_details = response.json()[0]
-        except IndexError:
-            order.provider_details = response.json()
+        # Supports only SupertextAPI v1.1
+        # creating order enpoint returns list, not a json object
+        order.provider_details = response.json()[0]
         order.save(update_fields=('provider_details',))
-
-        if not order.provider_order_id:
-            order.provider_order_id = order.provider_details.get('Id', '')
-            order.save(update_fields=('provider_order_id',))
-
         return response.json()
 
     def check_status(self):
