@@ -1,5 +1,9 @@
 import json
 from itertools import chain
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -8,6 +12,7 @@ from django.db.models import BooleanField
 from django.forms import modelform_factory
 from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
+from django.utils.translation import get_language_info
 
 from yurl import URL
 
@@ -109,6 +114,7 @@ def get_translatable_fields(plugin_type):
             if (
                 not field.is_relation
                 and not field.primary_key
+                and not field.choices
                 and not isinstance(field, BooleanField)
             )
         ]
@@ -120,3 +126,24 @@ def get_translatable_fields(plugin_type):
 @lru_cache(maxsize=None)
 def get_text_field_child_label(plugin_type):
     return settings.DJANGOCMS_TRANSLATIONS_CONF.get(plugin_type, {}).get('text_field_child_label')
+
+
+def get_language_name(lang_code):
+    info = get_language_info(lang_code)
+    if info['code'] == lang_code:
+        return info['name']
+    try:
+        return dict(settings.LANGUAGES)[lang_code]
+    except KeyError:
+        # fallback to known name
+        return info['name']
+
+
+def get_page_url(page, language, is_https=False):
+    return urljoin(
+        'http{}://{}'.format(
+            's' if is_https else '',
+            page.node.site.domain,
+        ),
+        page.get_absolute_url(language=language),
+    )

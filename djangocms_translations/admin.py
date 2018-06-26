@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
@@ -13,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
-from django.utils.translation import get_language_info, ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
 from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
@@ -27,7 +26,8 @@ from .forms import (
 )
 from .models import TranslationRequest
 from .tasks import prepare_translation_bulk_request
-from .utils import get_plugin_form, pretty_json
+from .utils import (get_language_name, get_page_url, get_plugin_form,
+                    pretty_json)
 
 
 class AllReadOnlyFieldsMixin(object):
@@ -63,12 +63,16 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 
     def get_queryset(self, request):
         queryset = super(TranslationRequestItemInline, self).get_queryset(request)
-        return queryset.select_related('translation_request')
+        return queryset.select_related(
+            'translation_request',
+            'source_cms_page__node__site',
+            'target_cms_page__node__site',
+        )
 
     def _pretty_page_display(self, page, language):
         return mark_safe(
             '<a href="{}" target="_top" onclick="closeSideframe()">{}</a>'.format(
-                page.get_absolute_url(language=language),
+                get_page_url(page, language),
                 escape(page.get_title(language)),
             )
         )
@@ -214,22 +218,12 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             _pages_sent=Count('items'),
         )
 
-    def _get_language_info(self, lang_code):
-        info = get_language_info(lang_code)
-        if info['code'] == lang_code:
-            return info['name']
-        try:
-            return dict(settings.LANGUAGES)[lang_code]
-        except KeyError:
-            # fallback to known name
-            return info['name']
-
     def pretty_source_language(self, obj):
-        return self._get_language_info(obj.source_language)
+        return get_language_name(obj.source_language)
     pretty_source_language.short_description = _('Source language')
 
     def pretty_target_language(self, obj):
-        return self._get_language_info(obj.target_language)
+        return get_language_name(obj.target_language)
     pretty_target_language.short_description = _('Target language')
 
     def pretty_provider_options(self, obj):

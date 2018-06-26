@@ -16,6 +16,7 @@ from cms.utils.conf import get_cms_setting
 from . import forms, models
 from .cms_renderer import UnboundPluginRenderer
 from .models import TranslationRequest
+from .utils import get_page_url
 
 
 @require_GET
@@ -70,6 +71,7 @@ def import_from_archive(request, pk):
         TranslationRequest
         .objects
         .filter(state=TranslationRequest.STATES.IMPORT_FAILED)
+        .select_related('target_cms_page__node__site')
     )
     trans_request = get_object_or_404(requests, pk=pk)
 
@@ -86,7 +88,11 @@ def import_from_archive(request, pk):
             redirect_to = reverse('admin:translation-request-adjust-import-data', args=(pk,))
         else:
             messages.error(request, ugettext('Plugins imported successfully.'))
-            redirect_to = target_cms_page.get_absolute_url(trans_request.target_language)
+            redirect_to = get_page_url(
+                target_cms_page,
+                trans_request.target_language,
+                is_https=request.is_secure,
+            )
         return redirect(redirect_to)
 
     context = {
