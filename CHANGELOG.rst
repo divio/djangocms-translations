@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+1.3.4 (unreleased)
+------------------
+
+* Show proper language names in toolbar menu
+* Show proper urls for pages from other sites then current
+
+
 1.3.3 (2018-06-22)
 ------------------
 
