@@ -8,6 +8,7 @@ from cms.forms.fields import PageSelectFormField
 from cms.models import Page
 
 from . import models
+from .utils import get_page_url
 
 
 def _get_bulk_request_eligible_pages(source_language, target_language):
@@ -36,8 +37,8 @@ class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
     INDENT = 8
 
     def label_from_instance(self, obj):
-        source_link = obj.get_absolute_url(self.source_language)
-        target_link = obj.get_absolute_url(self.target_language)
+        source_link = get_page_url(obj, self.source_language)
+        target_link = get_page_url(obj, self.target_language)
 
         return format_html(
             '<span data-path="{path}"></span>'
@@ -153,7 +154,7 @@ class TranslateInBulkStep2Form(forms.Form):
         pages_field.queryset = (
             _get_bulk_request_eligible_pages(pages_field.source_language, pages_field.target_language)
             .order_by('node__path')
-            .select_related('node')
+            .select_related('node__site')
         )
 
     def save(self, *args, **kwargs):
