@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.3.4 (unreleased)
+1.3.4 (2018-06-26)
 ------------------
 
 * Show proper language names in toolbar menu
