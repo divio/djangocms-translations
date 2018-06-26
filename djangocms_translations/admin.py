@@ -26,8 +26,12 @@ from .forms import (
 )
 from .models import TranslationRequest
 from .tasks import prepare_translation_bulk_request
-from .utils import (get_language_name, get_page_url, get_plugin_form,
-                    pretty_json)
+from .utils import (
+    get_language_name,
+    get_page_url,
+    get_plugin_form,
+    pretty_json,
+)
 
 
 class AllReadOnlyFieldsMixin(object):
