@@ -5,6 +5,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
+from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -66,6 +67,18 @@ class TranslationRequest(models.Model):
     export_content = JSONField(default={}, blank=True)
     request_content = JSONField(default={}, blank=True)
     selected_quote = models.ForeignKey('TranslationQuote', blank=True, null=True)
+    source_site = models.ForeignKey(
+        Site,
+        on_delete=models.SET_NULL,
+        related_name='translation_requests_as_source',
+        null=True,
+    )
+    target_site = models.ForeignKey(
+        Site,
+        on_delete=models.SET_NULL,
+        related_name='translation_requests_as_target',
+        null=True,
+    )
 
     @property
     def status(self):

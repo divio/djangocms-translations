@@ -18,16 +18,16 @@ class TranslationsToolbar(CMSToolbar):
         if not page:
             return
 
-        page_languages = page.get_languages()
-        if len(page_languages) < 2:
-            return
-
         menu = self.toolbar.get_or_create_menu('djangocms_translations', _('Translations'))
         overview_url = reverse('admin:djangocms_translations_translationrequest_changelist')
         menu.add_sideframe_item(_('Overview'), url=overview_url)
 
         bulk_translate_url = reverse('admin:translate-in-bulk-step-1')
         menu.add_modal_item(_('Translate in bulk'), url=bulk_translate_url)
+
+        page_languages = page.get_languages()
+        if len(page_languages) < 2:
+            return
 
         current_language = get_language_from_request(self.request)
         base_url = (

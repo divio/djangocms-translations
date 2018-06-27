@@ -65,7 +65,9 @@
     {% endif %}
 
     <p>
+        Source site: {{ translation_request.source_site }} <br>
         Source language: {{ translation_request.get_source_language_display }} <br>
+        Target site: {{ translation_request.target_site }} <br>
         Target language: {{ translation_request.get_target_language_display }} <br>
         Provider backend: {{ translation_request.get_provider_backend_display }} <br>
     </p>

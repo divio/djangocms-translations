@@ -1,24 +1,22 @@
 from django import forms
-from django.conf import settings
-from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
+from django.forms.widgets import RadioChoiceInput, RadioFieldRenderer
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from cms.forms.fields import PageSelectFormField
-from cms.models import Page
+from cms.models import Page, Title
 
 from . import models
 from .utils import get_page_url
 
 
-def _get_bulk_request_eligible_pages(source_language, target_language):
+def _get_pages_for_bulk_request(site, language):
     base_qs = (
         Page.objects
         .drafts()
         .select_related('node__parent')
-        .filter(node__site=settings.SITE_ID)
-        .filter(title_set__language__in=[source_language])
-        .filter(title_set__language__in=[target_language])
+        .filter(node__site=site)
+        .filter(title_set__language__in=[language])
         .order_by('node__path')
     )
     ids_by_path = {}
@@ -30,6 +28,19 @@ def _get_bulk_request_eligible_pages(source_language, target_language):
         else:
             ids_by_path[page.node.path] = page.pk
     return base_qs.filter(pk__in=ids_by_path.values())
+
+
+def _get_bulk_request_eligible_source_pages(source_language, target_language, source_site, target_site):
+    source_site_qs = _get_pages_for_bulk_request(source_site, source_language)
+    target_site_qs = _get_pages_for_bulk_request(target_site, target_language)
+    return source_site_qs.filter(
+        title_set__title__in=Title.objects.filter(
+            # target site page should have translation in source language with
+            # same title as source page to be able to translate it
+            language=source_language,
+            page__in=target_site_qs.values_list('pk', flat=True),
+        ).values_list('title', flat=True),
+    )
 
 
 class PageTreeMultipleChoiceField(forms.ModelMultipleChoiceField):
@@ -112,7 +123,9 @@ class TranslateInBulkStep1Form(forms.ModelForm):
     class Meta:
         model = models.TranslationRequest
         fields = [
+            'source_site',
             'source_language',
+            'target_site',
             'target_language',
             'provider_backend',
         ]
@@ -126,8 +139,11 @@ class TranslateInBulkStep1Form(forms.ModelForm):
         if not self.is_valid():
             return
 
-        eligible_pages = _get_bulk_request_eligible_pages(
-            self.cleaned_data['source_language'], self.cleaned_data['target_language']
+        eligible_pages = _get_bulk_request_eligible_source_pages(
+            self.cleaned_data['source_language'],
+            self.cleaned_data['target_language'],
+            self.cleaned_data['source_site'],
+            self.cleaned_data['target_site'],
         )
         if not eligible_pages.exists():
             raise forms.ValidationError('No eligible pages found for this configuration.')
@@ -152,19 +168,40 @@ class TranslateInBulkStep2Form(forms.Form):
         pages_field.source_language = self.translation_request.source_language
         pages_field.target_language = self.translation_request.target_language
         pages_field.queryset = (
-            _get_bulk_request_eligible_pages(pages_field.source_language, pages_field.target_language)
+            _get_bulk_request_eligible_source_pages(
+                pages_field.source_language,
+                pages_field.target_language,
+                self.translation_request.source_site,
+                self.translation_request.target_site,
+            )
             .order_by('node__path')
             .select_related('node__site')
         )
 
     def save(self, *args, **kwargs):
+        target_site_qs = _get_pages_for_bulk_request(
+            self.translation_request.target_site,
+            self.translation_request.target_language,
+        )
+        page_pairs = [
+            (
+                source_page,
+                target_site_qs.filter(
+                    title_set__title__in=source_page.title_set.filter(
+                        language=self.translation_request.source_language,
+                    ).values_list('title', flat=True)
+                ).first(),
+            )
+            for source_page in self.cleaned_data['pages']
+        ]
         translation_request_items = [
             models.TranslationRequestItem(
-                source_cms_page=page,
-                target_cms_page=page,
+                source_cms_page=source_page,
+                target_cms_page=target_page,
                 translation_request=self.translation_request
             )
-            for page in self.cleaned_data['pages']
+            for source_page, target_page in page_pairs
+            if source_page and target_page
         ]
         models.TranslationRequestItem.objects.bulk_create(translation_request_items)
         self.translation_request.set_provider_order_name(self.cleaned_data['pages'][0])
