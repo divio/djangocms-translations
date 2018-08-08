@@ -12,6 +12,7 @@ from django.db import IntegrityError
 from django.db import transaction
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
 from cms.models import CMSPlugin
@@ -315,7 +316,15 @@ class TranslationQuote(models.Model):
     provider_options = JSONField(default={}, blank=True)
 
     def __str__(self):
-        return '{} {} {}'.format(self.name, self.description, self.price_amount)
+        description = self.description or 'N/A'
+        delivery_date = self.delivery_date or 'N/A'
+        return mark_safe(
+            '<strong>{}</strong><br>'
+            '{}<br><br>'
+            'Delivery until: {}<br>'
+            'Price: {} {}'
+            .format(self.name, description, delivery_date, self.price_currency, self.price_amount)
+        )
 
 
 class TranslationOrder(models.Model):
