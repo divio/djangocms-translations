@@ -215,9 +215,8 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
     def fix_widget_choices(self):
         widget = self.fields['selected_quote'].widget
         new_widget_choices = []
-        for translation_quote_pk, old_choice_label in widget.choices:
-            translation_quote = models.TranslationQuote.objects.get(pk=translation_quote_pk)
-            new_widget_choices.append((translation_quote_pk, self.get_choice_label(translation_quote)))
+        for translation_quote in models.TranslationQuote.objects.filter(pk__in=[x[0] for x in widget.choices]):
+            new_widget_choices.append((translation_quote.pk, self.get_choice_label(translation_quote)))
         widget.choices = new_widget_choices
 
     def __init__(self, *args, **kwargs):
