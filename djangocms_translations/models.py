@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
+from cms.api import create_title
 from cms.models import CMSPlugin
 from cms.models.fields import PageField, PlaceholderField
 from cms.utils.plugins import copy_plugins_to_placeholder
@@ -176,6 +177,18 @@ class TranslationRequest(models.Model):
         import_error = False
         for translation_request_item_pk, placeholders in import_data.items():
             translation_request_item = id_item_mapping[translation_request_item_pk]
+
+            if self.target_language not in translation_request_item.target_cms_page.get_languages():
+                # A page-to-page translation can be done even when the target page does not have target translation.
+                # In this case, we need to create the translation - so plugins can be copied properly to it.
+                base_title = translation_request_item.source_cms_page.title_set.get(language=self.source_language)
+                create_title(
+                    language=self.target_language,
+                    title=base_title.title,
+                    page=translation_request_item.target_cms_page,
+                    slug=base_title.slug
+                )
+
             try:
                 import_plugins_to_page(
                     placeholders=placeholders,
@@ -284,13 +297,6 @@ class TranslationRequestItem(models.Model):
             raise ValidationError({
                 'source_cms_page':
                 _('Invalid choice. Page must contain {} translation').format(self.translation_request.source_language)
-            })
-
-        page_languages = self.target_cms_page.get_languages()
-        if self.translation_request.target_language not in page_languages:
-            raise ValidationError({
-                'target_cms_page':
-                _('Invalid choice. Page must contain {} translation').format(self.translation_request.target_language)
             })
 
         return super(TranslationRequestItem, self).clean()
