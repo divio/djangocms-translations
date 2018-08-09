@@ -203,8 +203,26 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
             'selected_quote': forms.RadioSelect(),
         }
 
+    def get_choice_label(self, obj):
+        return mark_safe(
+            '<strong>{}</strong><br>'
+            '{}<br><br>'
+            'Delivery until: {}<br>'
+            'Price: {} {}'
+            .format(obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount)
+        )
+
+    def fix_widget_choices(self):
+        widget = self.fields['selected_quote'].widget
+        new_widget_choices = []
+        for translation_quote_pk, old_choice_label in widget.choices:
+            translation_quote = models.TranslationQuote.objects.get(pk=translation_quote_pk)
+            new_widget_choices.append((translation_quote_pk, self.get_choice_label(translation_quote)))
+        widget.choices = new_widget_choices
+
     def __init__(self, *args, **kwargs):
         super(ChooseTranslationQuoteForm, self).__init__(*args, **kwargs)
         self.fields['selected_quote'].required = True
         self.fields['selected_quote'].queryset = self.instance.quotes.all()
         self.fields['selected_quote'].empty_label = None
+        self.fix_widget_choices()
