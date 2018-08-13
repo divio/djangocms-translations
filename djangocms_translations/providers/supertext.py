@@ -17,6 +17,13 @@ from ..utils import add_domain, get_translatable_fields, get_text_field_child_la
 from .base import BaseTranslationProvider, ProviderException
 
 
+# Format: language_code used in settings.LANGUAGE_* --> language_code that will be sent to Supertext
+LANGUAGE_MAPPING = {
+    'pl': 'pl-PL',
+    'it': 'it-IT',
+}
+
+
 def _get_translation_export_content(field, raw_plugin):
     plugin_class = get_plugin_class(raw_plugin['plugin_type'])
     try:
@@ -85,8 +92,8 @@ class SupertextTranslationProvider(BaseTranslationProvider):
     def get_export_data(self):
         data = {
             'ContentType': 'text/html',
-            'SourceLang': self.request.source_language,
-            'TargetLanguages': [self.request.target_language],
+            'SourceLang': LANGUAGE_MAPPING.get(self.request.source_language, self.request.source_language),
+            'TargetLanguages': [LANGUAGE_MAPPING.get(self.request.target_language, self.request.target_language)],
         }
         groups = []
         fields_by_plugin = {}
