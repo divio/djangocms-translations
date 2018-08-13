@@ -1,6 +1,6 @@
 from django import forms
 from django.conf import settings
-from django.utils.html import format_html
+from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from cms.forms.fields import PageSelectFormField
@@ -209,7 +209,7 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
             '{}<br><br>'
             'Delivery until: {}<br>'
             'Price: {} {}'
-            .format(obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount)
+            .format(escape(obj.name), escape(obj.description), obj.delivery_date, obj.price_currency, obj.price_amount)
         )
 
     def fix_widget_choices(self):
