@@ -5,4 +5,3 @@ flake8>=3.0.4
 psycopg2
 
 -e git+ssh://git@github.com/divio/djangocms-transfer.git@master#egg=djangocms-transfer
--e git://github.com/divio/django-cms.git@develop#egg=django-cms
