@@ -296,7 +296,7 @@ class SupertextTranslationProviderTestCase(CMSTestCase):
                 },
             ],
             'ContentType': 'text/html',
-            'SourceLang': 'en',
+            'SourceLang': 'en-US',  # "en" is mapped to "en-US" so Supertext can deal with it properly.
             'TargetLanguages': [
                 'pt',
             ],

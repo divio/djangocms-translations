@@ -19,8 +19,25 @@ from .base import BaseTranslationProvider, ProviderException
 
 # Format: language_code used in settings.LANGUAGE_* --> language_code that will be sent to Supertext
 LANGUAGE_MAPPING = {
-    'pl': 'pl-PL',
+    'ch-de': 'de-CH',
+    'ch-fr': 'fr-CH',
+    'da': 'da-DK',
+    'de': 'de-DE',
+    'en': 'en-US',
+    # 'en-nz': FIXME: Supertext does not support this language
+    # 'en-za': FIXME: Supertext does not support this language
+    'es': 'es-ES',
+    'es-xl': 'es-419',
+    'fi': 'fi-FI',
+    'fr': 'fr-FR',
     'it': 'it-IT',
+    'ja': 'ja-JP',
+    'nb': 'nb-NO',
+    'nl': 'nl-NL',
+    'pl': 'pl-PL',
+    'ru': 'ru-RU',
+    'sk': 'sk-SK',
+    'sv': 'sv-SE',
 }
 
 
