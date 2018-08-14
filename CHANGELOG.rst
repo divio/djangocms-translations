@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+1.3.6 (2018-08-14)
+------------------
+
+* Fix another language codes mismatch on supertext
+
+
+1.3.5 (2018-08-13)
+------------------
+
+* Fix language codes mismatch on supertext for languages "pl" and "it"
+
+
 1.3.4 (2018-06-26)
 ------------------
 
