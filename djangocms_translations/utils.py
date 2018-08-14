@@ -112,10 +112,10 @@ def get_translatable_fields(plugin_type):
             field.name
             for field in fields
             if (
-                not field.is_relation
-                and not field.primary_key
-                and not field.choices
-                and not isinstance(field, BooleanField)
+                not field.is_relation and
+                not field.primary_key and
+                not field.choices and
+                not isinstance(field, BooleanField)
             )
         ]
 

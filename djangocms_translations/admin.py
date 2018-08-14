@@ -175,7 +175,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields':  (
+            'fields': (
                 'provider_order_name',
                 'user',
                 'state',
@@ -193,7 +193,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             ),
         }),
         (_('Additional Info'), {
-            'fields':  (
+            'fields': (
                 'pretty_provider_options',
                 'pretty_export_content',
                 'pretty_request_content',
@@ -259,6 +259,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
 
     def pretty_status(self, obj):
         action = ''
+
         def render_action(url, title):
             return mark_safe(
                 '<a class="button" href="{url}">{title}</a>'
