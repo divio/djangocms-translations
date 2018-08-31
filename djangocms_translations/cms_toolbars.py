@@ -18,9 +18,6 @@ class TranslationsToolbar(CMSToolbar):
         if not page:
             return
 
-        if not page.publisher_is_draft:
-            page = page.publisher_draft
-
         menu = self.toolbar.get_or_create_menu('djangocms_translations', _('Translations'))
         overview_url = reverse('admin:djangocms_translations_translationrequest_changelist')
         menu.add_sideframe_item(_('Overview'), url=overview_url)
@@ -32,10 +29,6 @@ class TranslationsToolbar(CMSToolbar):
             menu.add_modal_item(_('Translate in bulk'), url=bulk_translate_url)
 
         current_language = get_language_from_request(self.request)
-        languages_available_for_page_to_page_translation = [x for x in page.get_languages() if x != current_language]
-        if not languages_available_for_page_to_page_translation:
-            return
-
         base_url = (
             '{url}?source_cms_page={page_id}&target_cms_page={page_id}&source_language={source_language}'
             .format(url=reverse('admin:create-translation-request'), page_id=page.pk, source_language=current_language)
@@ -47,7 +40,9 @@ class TranslationsToolbar(CMSToolbar):
             position=1,
         )
 
-        for code in languages_available_for_page_to_page_translation:
-            name = get_language_name(code)
-            sub_url = '{}&target_language={}'.format(base_url, code)
-            translate_menu.add_modal_item(_('to {}'.format(name)), url=sub_url)
+        for language_data in all_languages:
+            code = language_data[0]
+            if code != current_language:
+                name = get_language_name(code)
+                sub_url = '{}&target_language={}'.format(base_url, code)
+                translate_menu.add_modal_item(_('to {}'.format(name)), url=sub_url)
