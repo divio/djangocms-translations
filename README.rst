@@ -24,6 +24,7 @@ Manual Installation
     cd djangocms-translations
     python setup.py develop
     pip install -r tests/requirements.txt
+    pip install django-cms  # See supported versions on tox.ini
 
 
 Please note you need a postgres database running for this to work.

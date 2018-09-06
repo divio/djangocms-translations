@@ -10,8 +10,8 @@ from .utils import get_language_name
 @toolbar_pool.register
 class TranslationsToolbar(CMSToolbar):
     def populate(self):
-        available_languages = settings.LANGUAGES
-        if len(available_languages) < 2:
+        all_languages = settings.LANGUAGES
+        if len(all_languages) < 2:
             return
 
         page = self.request.current_page
@@ -22,12 +22,11 @@ class TranslationsToolbar(CMSToolbar):
         overview_url = reverse('admin:djangocms_translations_translationrequest_changelist')
         menu.add_sideframe_item(_('Overview'), url=overview_url)
 
-        bulk_translate_url = reverse('admin:translate-in-bulk-step-1')
-        menu.add_modal_item(_('Translate in bulk'), url=bulk_translate_url)
-
-        page_languages = page.get_languages()
-        if len(page_languages) < 2:
-            return
+        languages_within_this_site = settings.CMS_LANGUAGES[settings.SITE_ID]
+        if len(languages_within_this_site) >= 2:
+            # Bulk translations work only within a site.
+            bulk_translate_url = reverse('admin:translate-in-bulk-step-1')
+            menu.add_modal_item(_('Translate in bulk'), url=bulk_translate_url)
 
         current_language = get_language_from_request(self.request)
         base_url = (
@@ -41,10 +40,8 @@ class TranslationsToolbar(CMSToolbar):
             position=1,
         )
 
-        if not page.publisher_is_draft:
-            page = page.publisher_draft
-
-        for code in page.get_languages():
+        for language_data in all_languages:
+            code = language_data[0]
             if code != current_language:
                 name = get_language_name(code)
                 sub_url = '{}&target_language={}'.format(base_url, code)

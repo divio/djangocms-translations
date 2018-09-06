@@ -1,6 +1,5 @@
 from django import forms
 from django.conf import settings
-from django.forms.widgets import RadioFieldRenderer, RadioChoiceInput
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -194,28 +193,6 @@ class TranslateInBulkStep3Form(forms.Form):
         self.translation_request.submit_request()
 
 
-class QuoteInput(RadioChoiceInput):
-    def __init__(self, *args, **kwargs):
-        super(QuoteInput, self).__init__(*args, **kwargs)
-        self.choice_label = mark_safe('<strong>oy</strong>')
-        obj = models.TranslationQuote.objects.get(pk=self.choice_value)
-        self.choice_label = mark_safe(
-            '<strong>{}</strong><br>'
-            '{}<br><br>'
-            'Delivery until: {}<br>'
-            'Price: {} {}'
-            .format(obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount)
-        )
-
-
-class QuoteRenderer(RadioFieldRenderer):
-    choice_input_class = QuoteInput
-
-
-class QuoteWidget(forms.RadioSelect):
-    renderer = QuoteRenderer
-
-
 class ChooseTranslationQuoteForm(forms.ModelForm):
     class Meta:
         model = models.TranslationRequest
@@ -223,11 +200,28 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
             'selected_quote',
         )
         widgets = {
-            'selected_quote': QuoteWidget(),
+            'selected_quote': forms.RadioSelect(),
         }
+
+    def get_choice_label(self, obj):
+        return format_html(
+            '<strong>{}</strong><br>'
+            '{}<br><br>'
+            'Delivery until: {}<br>'
+            'Price: {} {}',
+            obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount
+        )
+
+    def fix_widget_choices(self):
+        widget = self.fields['selected_quote'].widget
+        new_widget_choices = []
+        for translation_quote in models.TranslationQuote.objects.filter(pk__in=[x[0] for x in widget.choices]):
+            new_widget_choices.append((translation_quote.pk, self.get_choice_label(translation_quote)))
+        widget.choices = new_widget_choices
 
     def __init__(self, *args, **kwargs):
         super(ChooseTranslationQuoteForm, self).__init__(*args, **kwargs)
         self.fields['selected_quote'].required = True
         self.fields['selected_quote'].queryset = self.instance.quotes.all()
         self.fields['selected_quote'].empty_label = None
+        self.fix_widget_choices()
