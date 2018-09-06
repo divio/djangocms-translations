@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+1.3.7 (2018-09-06)
+------------------
+
+* Hide bulk translations menu if number of languages for that site == 1
+* Show page-to-page translations menu even when current page has only one language (use settings.LANGUAGES as a pivot)
+* Add Django 1.11 compatibility
+
+
 1.3.6 (2018-08-14)
 ------------------
 
