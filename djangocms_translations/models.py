@@ -52,7 +52,7 @@ class TranslationRequest(models.Model):
         ('SUPERTEXT', SupertextTranslationProvider.__name__, _('Supertext')),
     )
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     state = models.CharField(choices=STATES, default=STATES.DRAFT, max_length=100)
     date_created = models.DateTimeField(auto_now_add=True)
     date_submitted = models.DateTimeField(blank=True, null=True)
@@ -62,10 +62,10 @@ class TranslationRequest(models.Model):
     target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
     provider_order_name = models.CharField(max_length=255, blank=True)
-    provider_options = JSONField(default={}, blank=True)
-    export_content = JSONField(default={}, blank=True)
-    request_content = JSONField(default={}, blank=True)
-    selected_quote = models.ForeignKey('TranslationQuote', blank=True, null=True)
+    provider_options = JSONField(default=dict, blank=True)
+    export_content = JSONField(default=dict, blank=True)
+    request_content = JSONField(default=dict, blank=True)
+    selected_quote = models.ForeignKey('TranslationQuote', blank=True, null=True, on_delete=models.CASCADE)
 
     @property
     def status(self):
@@ -270,7 +270,7 @@ class TranslationRequest(models.Model):
 
 
 class TranslationRequestItem(models.Model):
-    translation_request = models.ForeignKey(TranslationRequest, related_name='items')
+    translation_request = models.ForeignKey(TranslationRequest, related_name='items', on_delete=models.CASCADE)
     source_cms_page = PageField(related_name='translation_requests_as_source', on_delete=models.PROTECT)
     target_cms_page = PageField(related_name='translation_requests_as_target', on_delete=models.PROTECT)
 
@@ -303,7 +303,7 @@ class TranslationRequestItem(models.Model):
 
 
 class TranslationQuote(models.Model):
-    request = models.ForeignKey(TranslationRequest, related_name='quotes')
+    request = models.ForeignKey(TranslationRequest, related_name='quotes', on_delete=models.CASCADE)
     date_received = models.DateTimeField()
 
     name = models.CharField(max_length=1000)
@@ -312,7 +312,7 @@ class TranslationQuote(models.Model):
 
     price_currency = models.CharField(max_length=10)
     price_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    provider_options = JSONField(default={}, blank=True)
+    provider_options = JSONField(default=dict, blank=True)
 
     def __str__(self):
         return '{} {} {}'.format(self.name, self.description, self.price_amount)
@@ -326,17 +326,17 @@ class TranslationOrder(models.Model):
         ('DONE', 'done', _('Done')),
     )
 
-    request = models.OneToOneField(TranslationRequest, related_name='order')
+    request = models.OneToOneField(TranslationRequest, related_name='order', on_delete=models.CASCADE)
 
     date_created = models.DateTimeField(auto_now_add=True)
     date_translated = models.DateTimeField(blank=True, null=True)
 
     state = models.CharField(choices=STATES, default=STATES.OPEN, max_length=100)
 
-    request_content = JSONField(default={}, blank=True)
-    response_content = JSONField(default={}, blank=True)
+    request_content = JSONField(default=dict, blank=True)
+    response_content = JSONField(default=dict, blank=True)
 
-    provider_details = JSONField(default={}, blank=True)
+    provider_details = JSONField(default=dict, blank=True)
 
     @property
     def price_with_currency(self):
@@ -414,7 +414,7 @@ class ArchivedPlaceholder(models.Model):
 
 
 class ArchivedPlugin(models.Model):
-    data = JSONField(default={}, blank=True)
+    data = JSONField(default=dict, blank=True)
     placeholder = models.ForeignKey(
         ArchivedPlaceholder,
         on_delete=models.CASCADE,
