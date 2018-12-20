@@ -6,6 +6,8 @@ Changelog
 ==================
 
 * Added support for Django 2.0 and 2.1
+* Adapted test matrix
+* Cleaned up files
 
 
 1.3.7 (2018-09-06)
