@@ -3,15 +3,14 @@ from setuptools import setup, find_packages
 from djangocms_translations import __version__
 
 REQUIREMENTS = [
+    'django-cms>=3.5',
     'django-appconf>=1.0,<2',
     'django-extended-choices',
+    'djangocms-transfer',
     'pygments',
     'yurl',
     'requests',
     'celery>=3.0,<4.0',  # Aldryn-celery supports only 3.X
-    # 'djangocms-transfer',  # Private repo
-    # 'django-cms',  # Develop branch
-    'django>=1.10,<2.0',
 ]
 
 CLASSIFIERS = [
