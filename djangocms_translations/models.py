@@ -62,9 +62,9 @@ class TranslationRequest(models.Model):
     target_language = models.CharField(max_length=10, choices=settings.LANGUAGES)
     provider_backend = models.CharField(max_length=100, choices=PROVIDERS)
     provider_order_name = models.CharField(max_length=255, blank=True)
-    provider_options = JSONField(default={}, blank=True)
-    export_content = JSONField(default={}, blank=True)
-    request_content = JSONField(default={}, blank=True)
+    provider_options = JSONField(default=dict, blank=True)
+    export_content = JSONField(default=dict, blank=True)
+    request_content = JSONField(default=dict, blank=True)
     selected_quote = models.ForeignKey('TranslationQuote', blank=True, null=True, on_delete=models.CASCADE)
 
     @property
@@ -312,7 +312,7 @@ class TranslationQuote(models.Model):
 
     price_currency = models.CharField(max_length=10)
     price_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    provider_options = JSONField(default={}, blank=True)
+    provider_options = JSONField(default=dict, blank=True)
 
     def __str__(self):
         return '{} {} {}'.format(self.name, self.description, self.price_amount)
@@ -333,10 +333,10 @@ class TranslationOrder(models.Model):
 
     state = models.CharField(choices=STATES, default=STATES.OPEN, max_length=100)
 
-    request_content = JSONField(default={}, blank=True)
-    response_content = JSONField(default={}, blank=True)
+    request_content = JSONField(default=dict, blank=True)
+    response_content = JSONField(default=dict, blank=True)
 
-    provider_details = JSONField(default={}, blank=True)
+    provider_details = JSONField(default=dict, blank=True)
 
     @property
     def price_with_currency(self):
@@ -414,7 +414,7 @@ class ArchivedPlaceholder(models.Model):
 
 
 class ArchivedPlugin(models.Model):
-    data = JSONField(default={}, blank=True)
+    data = JSONField(default=dict, blank=True)
     placeholder = models.ForeignKey(
         ArchivedPlaceholder,
         on_delete=models.CASCADE,
