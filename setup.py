@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+
 from djangocms_translations import __version__
+
 
 REQUIREMENTS = [
     'django-cms>=3.5',
@@ -10,8 +12,9 @@ REQUIREMENTS = [
     'pygments',
     'yurl',
     'requests',
-    'celery>=3.0,<4.0',  # Aldryn-celery supports only 3.X
+    'celery>=3.0,<4.0', # Aldryn-celery supports only 3.X
 ]
+
 
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
@@ -26,19 +29,20 @@ CLASSIFIERS = [
     'Topic :: Software Development :: Libraries :: Application Frameworks',
 ]
 
+
 setup(
     name='djangocms-translations',
     version=__version__,
-    description=open('README.rst').read(),
+    description='Send django CMS content for translation to 3rd party providers.',
     author='Divio AG',
     author_email='info@divio.ch',
     url='https://github.com/divio/djangocms-translations',
-    packages=find_packages(),
-    license='LICENSE',
-    platforms=['OS Independent'],
-    install_requires=REQUIREMENTS,
-    classifiers=CLASSIFIERS,
+    license='BSD',
+    long_description=open('README.rst').read(),
+    packages=find_packages(exclude=['tests']),
     include_package_data=True,
     zip_safe=False,
+    install_requires=REQUIREMENTS,
+    classifiers=CLASSIFIERS,
     test_suite='tests.settings.run',
 )
