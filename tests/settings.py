@@ -27,11 +27,10 @@ HELPER_SETTINGS = {
     'DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER'),
     'DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD'),
     'DJANGOCMS_TRANSLATIONS_USE_STAGING': True,
-
-    'DATABASES': {'default': dj_database_url.config(
-        env='DJANGOCMS_TRANSLATIONS_DATABASE_URL',
-        default='postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations'
-    )},
+    # 'DATABASES': {'default': dj_database_url.config(
+    #     env='DJANGOCMS_TRANSLATIONS_DATABASE_URL',
+    #     default='postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations'
+    # )},
     'INSTALLED_APPS': [
         'celery',
     ],
