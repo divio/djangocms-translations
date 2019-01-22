@@ -266,7 +266,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
             action = mark_safe(
                 '<a class="button" '
                 'onclick="window.django.jQuery.ajax({{'
-                'method: \'POST\', headers: {headers}, url: \'{url}\', success: {refresh_window_callback}'
+                'method: \'POST\', headers: {headers}, url: \'{url}\', success: {refresh_window_callback}'  # noqa
                 '}});" href="#">{title}</a>'.format(
                     url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
                     title=_('Refresh'),
