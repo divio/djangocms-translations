@@ -27,11 +27,6 @@ except ImportError:
     from urlparse import urljoin
 
 
-
-
-
-
-
 USE_HTTPS = getattr(settings, 'URLS_USE_HTTPS', False)
 
 
@@ -95,7 +90,7 @@ def add_domain(url, domain=None):
 def pretty_data(data, LexerClass):
     formatter = HtmlFormatter(style='colorful')
     data = highlight(data, LexerClass(), formatter)
-    style = "<style>" + formatter.get_style_defs() + "</style><br>"
+    style = '<style>' + formatter.get_style_defs() + '</style><br>'
     return mark_safe(style + data)
 
 

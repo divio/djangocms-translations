@@ -129,7 +129,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
 
     def provider_order_id(self, obj):
         return obj.provider_details.get('Id') or obj.response_content.get('Id')
-    provider_order_id.short_description = _('Provider Order ID')
+    provider_order_id.short_description = _('Provider order ID')
 
     def pretty_provider_options(self, obj):
         return pretty_json(json.dumps(obj.provider_options))
@@ -566,7 +566,7 @@ class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
         try:
             plugin_id = int(plugin_id)
         except ValueError:
-            return HttpResponseNotFound(force_text(_("Plugin not found")))
+            return HttpResponseNotFound(force_text(_('Plugin not found')))
 
         obj = self._get_plugin_from_id(plugin_id)
         plugin_class = plugin_pool.get_plugin(obj.plugin_type)

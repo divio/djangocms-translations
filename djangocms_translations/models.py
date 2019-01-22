@@ -80,7 +80,7 @@ class TranslationRequest(models.Model):
     _provider = None
 
     def set_status(self, status, commit=True):
-        assert status in self.STATES.values, 'Invalid status'
+        assert status in self.STATES.values, _('Invalid status')
         self.state = status
 
         if commit:
@@ -92,10 +92,10 @@ class TranslationRequest(models.Model):
         request_item_count = self.items.count()
 
         if request_item_count > 1:
-            bulk_text = ' - {} pages'.format(request_item_count)
+            bulk_text = _(' - {} pages').format(request_item_count)
         else:
             bulk_text = ''
-        self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
+        self.provider_order_name = _('Order #{} - {}{}').format(self.pk, initial_page_title, bulk_text)
         self.save(update_fields=('provider_order_name',))
 
     def set_content_from_cms(self):
@@ -152,7 +152,7 @@ class TranslationRequest(models.Model):
         return response
 
     def check_status(self):
-        assert hasattr(self, 'order'), 'Cannot check status if there is no order.'
+        assert hasattr(self, 'order'), _('Cannot check status if there is no order.')
         status = self.provider.check_status()
         self.order.state = status['Status'].lower()
         # TODO: which states are available?
@@ -168,7 +168,7 @@ class TranslationRequest(models.Model):
         try:
             import_data = self.provider.get_import_data()
         except ValueError:
-            message = "Received invalid data from {}".format(self.provider_backend)
+            message = _('Received invalid data from {}.').format(self.provider_backend)
             logger.exception(message)
             import_state.set_error_message(message)
             return self.set_status(self.STATES.IMPORT_FAILED)
@@ -185,7 +185,7 @@ class TranslationRequest(models.Model):
                 )
             except (IntegrityError, ObjectDoesNotExist):
                 self._set_import_archive()
-                message = "Failed to import plugins from {}".format(self.provider_backend)
+                message = _('Failed to import plugins from {}.').format(self.provider_backend)
                 logger.exception(message)
                 import_state.set_error_message(message)
                 import_error = True
@@ -265,7 +265,7 @@ class TranslationRequest(models.Model):
 
     def clean(self, exclude=None):
         if self.source_language == self.target_language:
-            raise ValidationError(_('Source and target languages must be different'))
+            raise ValidationError(_('Source and target languages must be different.'))
 
         return super(TranslationRequest, self).clean()
 
@@ -284,14 +284,14 @@ class TranslationRequestItem(models.Model):
         if self.translation_request.source_language not in page_languages:
             raise ValidationError({
                 'source_cms_page':
-                _('Invalid choice. Page must contain {} translation').format(self.translation_request.source_language)
+                _('Invalid choice. Page must contain {} translation.').format(self.translation_request.source_language)
             })
 
         page_languages = self.target_cms_page.get_languages()
         if self.translation_request.target_language not in page_languages:
             raise ValidationError({
                 'target_cms_page':
-                _('Invalid choice. Page must contain {} translation').format(self.translation_request.target_language)
+                _('Invalid choice. Page must contain {} translation.').format(self.translation_request.target_language)
             })
 
         return super(TranslationRequestItem, self).clean()

@@ -108,7 +108,7 @@ class CreateTranslationForm(forms.ModelForm):
 
 
 class TranslateInBulkStep1Form(forms.ModelForm):
-    ''' Step 1: creates the <TranslationRequest> (without <TranslationRequestItem>s). '''
+    """ Step 1: creates the <TranslationRequest> (without <TranslationRequestItem>s). """
 
     class Meta:
         model = models.TranslationRequest
@@ -131,7 +131,9 @@ class TranslateInBulkStep1Form(forms.ModelForm):
             self.cleaned_data['source_language'], self.cleaned_data['target_language']
         )
         if not eligible_pages.exists():
-            raise forms.ValidationError('No eligible pages found for this configuration.')
+            raise forms.ValidationError(
+                _('No eligible pages found for this configuration.')
+            )
 
         return self.cleaned_data
 
@@ -141,7 +143,7 @@ class TranslateInBulkStep1Form(forms.ModelForm):
 
 
 class TranslateInBulkStep2Form(forms.Form):
-    ''' Step 2: adds <TranslationRequestItem>s to <TranslationRequest> created on Step 1. '''
+    """ Step 2: adds <TranslationRequestItem>s to <TranslationRequest> created on Step 1. """
 
     pages = PageTreeMultipleChoiceField(Page.objects.drafts())
 
@@ -172,7 +174,7 @@ class TranslateInBulkStep2Form(forms.Form):
 
 
 class TranslateInBulkStep3Form(forms.Form):
-    '''Step 3: Only for send without quote option'''
+    """ Step 3: Only for send without quote option """
 
     order_type = forms.ChoiceField(widget=forms.RadioSelect)
     delivery_time = forms.ChoiceField(widget=forms.RadioSelect)
@@ -189,7 +191,7 @@ class TranslateInBulkStep3Form(forms.Form):
         self.translation_request.set_provider_options(
             order_type=self.cleaned_data['order_type'],
             delivery_time=self.cleaned_data['delivery_time'],
-            additional_info='Order without Quote',
+            additional_info=_('Order without Quote'),
         )
         self.translation_request.set_status(models.TranslationRequest.STATES.READY_FOR_SUBMISSION)
         self.translation_request.submit_request()
@@ -207,10 +209,10 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
 
     def get_choice_label(self, obj):
         return format_html(
-            '<strong>{}</strong><br>'
+            _('<strong>{}</strong><br>'
             '{}<br><br>'
             'Delivery until: {}<br>'
-            'Price: {} {}',
+            'Price: {} {}'),
             obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount
         )
 
