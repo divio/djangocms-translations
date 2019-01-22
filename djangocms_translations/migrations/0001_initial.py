@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date_created', models.DateTimeField(auto_now_add=True)),
                 ('date_translated', models.DateTimeField(blank=True, null=True)),
-                ('state', models.CharField(choices=[('open', 'Open'), ('pending_quote', 'Pending'), ('failed', 'Failed/cancelled.'), ('done', 'Done')], default='open', max_length=100)),
+                ('state', models.CharField(choices=[('open', 'Open'), ('pending_quote', 'Pending'), ('failed', 'Failed/cancelled'), ('done', 'Done')], default='open', max_length=100)),
                 ('request_content', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict)),
                 ('response_content', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict)),
                 ('provider_details', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict)),

@@ -26,8 +26,8 @@ class Migration(migrations.Migration):
                 choices=[('draft', 'Draft'), ('open', 'Open'), ('pending_quote', 'Pending quote from provider'),
                          ('pending_approval', 'Pending approval of quote'),
                          ('ready_for_submission', 'Pending submission to translation provider'),
-                         ('in_translation', 'In translation'), ('import_started', 'Import Started'),
-                         ('import_failed', 'Import Failed'), ('imported', 'Imported'), ('cancelled', 'Cancelled')],
+                         ('in_translation', 'In translation'), ('import_started', 'Import started'),
+                         ('import_failed', 'Import failed'), ('imported', 'Imported'), ('cancelled', 'Cancelled')],
                 default='draft', max_length=100),
         ),
     ]

@@ -43,8 +43,8 @@ class TranslationRequest(models.Model):
         ('PENDING_APPROVAL', 'pending_approval', _('Pending approval of quote')),
         ('READY_FOR_SUBMISSION', 'ready_for_submission', _('Pending submission to translation provider')),
         ('IN_TRANSLATION', 'in_translation', _('In translation')),
-        ('IMPORT_STARTED', 'import_started', _('Import Started')),
-        ('IMPORT_FAILED', 'import_failed', _('Import Failed')),
+        ('IMPORT_STARTED', 'import_started', _('Import started')),
+        ('IMPORT_FAILED', 'import_failed', _('Import failed')),
         ('IMPORTED', 'imported', _('Imported')),
         ('CANCELLED', 'cancelled', _('Cancelled')),
     )
@@ -323,7 +323,7 @@ class TranslationOrder(models.Model):
     STATES = Choices(
         ('OPEN', 'open', _('Open')),
         ('PENDING', 'pending_quote', _('Pending')),
-        ('FAILED', 'failed', _('Failed/cancelled.')),
+        ('FAILED', 'failed', _('Failed/cancelled')),
         ('DONE', 'done', _('Done')),
     )
 
@@ -434,8 +434,8 @@ class ArchivedPlugin(models.Model):
 
 class TranslationImport(models.Model):
     STATES = Choices(
-        ('STARTED', 'started', _('Import Started')),
-        ('FAILED', 'failed', _('Import Failed')),
+        ('STARTED', 'started', _('Import started')),
+        ('FAILED', 'failed', _('Import failed')),
         ('IMPORTED', 'imported', _('Imported')),
     )
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-22 13:41+0100\n"
+"POT-Creation-Date: 2019-01-22 16:02+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,19 +19,19 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: djangocms_translations/admin.py:83
-msgid "Source CMS Page Slug"
+msgid "Source CMS page slug"
 msgstr ""
 
 #: djangocms_translations/admin.py:87
-msgid "Target CMS Page Slug"
+msgid "Target CMS page slug"
 msgstr ""
 
 #: djangocms_translations/admin.py:91
-msgid "Source CMS Page"
+msgid "Source CMS page"
 msgstr ""
 
 #: djangocms_translations/admin.py:95
-msgid "Target CMS Page"
+msgid "Target CMS page"
 msgstr ""
 
 #: djangocms_translations/admin.py:132
@@ -55,7 +55,7 @@ msgid "Price"
 msgstr ""
 
 #: djangocms_translations/admin.py:192
-msgid "Additional Info"
+msgid "Additional info"
 msgstr ""
 
 #: djangocms_translations/admin.py:224
@@ -115,7 +115,7 @@ msgid "Plugin not found"
 msgstr ""
 
 #: djangocms_translations/apps.py:8
-msgid "Django CMS Translations"
+msgid "django CMS Translations"
 msgstr ""
 
 #: djangocms_translations/cms_toolbars.py:24
@@ -147,7 +147,7 @@ msgid "No eligible pages found for this configuration."
 msgstr ""
 
 #: djangocms_translations/forms.py:194
-msgid "Order without Quote"
+msgid "Order without quote"
 msgstr ""
 
 #: djangocms_translations/forms.py:212
@@ -179,11 +179,11 @@ msgid "In translation"
 msgstr ""
 
 #: djangocms_translations/models.py:46 djangocms_translations/models.py:437
-msgid "Import Started"
+msgid "Import started"
 msgstr ""
 
 #: djangocms_translations/models.py:47 djangocms_translations/models.py:438
-msgid "Import Failed"
+msgid "Import failed"
 msgstr ""
 
 #: djangocms_translations/models.py:48 djangocms_translations/models.py:439
@@ -235,7 +235,7 @@ msgid "Pending"
 msgstr ""
 
 #: djangocms_translations/models.py:326
-msgid "Failed/cancelled."
+msgid "Failed/cancelled"
 msgstr ""
 
 #: djangocms_translations/models.py:327
@@ -247,7 +247,7 @@ msgid "Translation"
 msgstr ""
 
 #: djangocms_translations/providers/supertext.py:73
-msgid "Specialist Translation"
+msgid "Specialist translation"
 msgstr ""
 
 #: djangocms_translations/providers/supertext.py:74

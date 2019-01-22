@@ -191,7 +191,7 @@ class TranslateInBulkStep3Form(forms.Form):
         self.translation_request.set_provider_options(
             order_type=self.cleaned_data['order_type'],
             delivery_time=self.cleaned_data['delivery_time'],
-            additional_info=_('Order without Quote'),
+            additional_info=_('Order without quote'),
         )
         self.translation_request.set_status(models.TranslationRequest.STATES.READY_FOR_SUBMISSION)
         self.translation_request.submit_request()

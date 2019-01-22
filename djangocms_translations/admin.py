@@ -80,19 +80,19 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 
     def source_cms_page_slug(self, obj):
         return obj.source_cms_page.get_slug(language=obj.translation_request.source_language)
-    source_cms_page_slug.short_description = _('Source CMS Page Slug')
+    source_cms_page_slug.short_description = _('Source CMS page slug')
 
     def target_cms_page_slug(self, obj):
         return obj.target_language.get_slug(language=obj.translation_request.target_language)
-    target_cms_page_slug.short_description = _('Target CMS Page Slug')
+    target_cms_page_slug.short_description = _('Target CMS page slug')
 
     def pretty_source_cms_page(self, obj):
         return self._pretty_page_display(obj.source_cms_page, obj.translation_request.source_language)
-    pretty_source_cms_page.short_description = _('Source CMS Page')
+    pretty_source_cms_page.short_description = _('Source CMS page')
 
     def pretty_target_cms_page(self, obj):
         return self._pretty_page_display(obj.target_cms_page, obj.translation_request.target_language)
-    pretty_target_cms_page.short_description = _('Target CMS Page')
+    pretty_target_cms_page.short_description = _('Target CMS page')
 
 
 class TranslationQuoteInline(AllReadOnlyFieldsMixin, admin.TabularInline):
@@ -189,7 +189,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 'provider_backend',
             ),
         }),
-        (_('Additional Info'), {
+        (_('Additional info'), {
             'fields': (
                 'pretty_provider_options',
                 'pretty_export_content',

@@ -5,4 +5,4 @@ from django.utils.translation import ugettext_lazy as _
 
 class DjangocmsTranslationsConfig(AppConfig):
     name = 'djangocms_translations'
-    verbose_name = _('Django CMS Translations')
+    verbose_name = _('django CMS Translations')

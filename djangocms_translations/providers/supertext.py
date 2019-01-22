@@ -70,7 +70,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
     API_STAGE_URL = 'https://dev.supertext.ch/api/'
     ORDER_TYPE_CHOICES = Choices(
         ('TRANSLATION', 6, _('Translation')),
-        ('SPECIALIST_TRANSLATION', 8, _('Specialist Translation')),
+        ('SPECIALIST_TRANSLATION', 8, _('Specialist translation')),
         ('TRANSCREATION', 9, _('Transcreation')),
     )
     DELIVERY_TIME_CHOICES = Choices(
