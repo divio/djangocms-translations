@@ -11,7 +11,7 @@ REQUIREMENTS = [
     'pygments',
     'yurl',
     'requests',
-    'celery>=3.0,<4.0', # aldryn-celery supports only 3.X
+    'celery>=3.0,<4.0',  # aldryn-celery supports only 3.X
 ]
 
 

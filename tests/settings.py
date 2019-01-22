@@ -5,7 +5,6 @@ from __future__ import division, print_function, unicode_literals
 import os
 import sys
 
-import dj_database_url
 from tests.celery import app  # noqa
 
 

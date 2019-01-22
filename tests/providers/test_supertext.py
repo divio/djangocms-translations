@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
-import copy
 import json
-
-from django.contrib.auth.models import User
 
 from cms.api import add_plugin, create_page
 from cms.test_utils.testcases import CMSTestCase
 
-from djangocms_translations.models import (
-    TranslationOrder, TranslationRequest, TranslationRequestItem,
-)
 from djangocms_translations.providers.supertext import (
-    SupertextTranslationProvider, _get_translation_export_content,
-    _set_translation_import_content,
+    _get_translation_export_content, _set_translation_import_content,
 )
 
 from djangocms_transfer.exporter import export_page

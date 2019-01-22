@@ -208,13 +208,12 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
         }
 
     def get_choice_label(self, obj):
-        return format_html(
-            _('<strong>{}</strong><br>'
+        return format_html(_(
+            '<strong>{}</strong><br>'
             '{}<br><br>'
             'Delivery until: {}<br>'
-            'Price: {} {}'),
-            obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount
-        )
+            'Price: {} {}'
+        ), obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount)
 
     def fix_widget_choices(self):
         widget = self.fields['selected_quote'].widget
