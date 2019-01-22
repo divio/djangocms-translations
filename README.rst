@@ -8,10 +8,6 @@ django CMS Translations
 transferred to an external translation tool, processed and send back. It
 automatically creates the necessary plugin structure from the translations.
 
-This addon is compatible with `Divio Cloud <http://divio.com>`_ and is also available on the
-`django CMS Marketplace <https://marketplace.django-cms.org/en/addons/browse/djangocms-translations/>`_
-for easy installation.
-
 
 Contributing
 ============
@@ -22,11 +18,8 @@ pull request, please review our `contribution guidelines
 <http://docs.django-cms.org/en/latest/contributing/index.html>`_.
 
 We're grateful to all contributors who have helped create and maintain this package.
-Contributors are listed at the `contributors <https://github.com/divio/djangocms-transfer/graphs/contributors>`_
+Contributors are listed at the `contributors <https://github.com/divio/djangocms-translations/graphs/contributors>`_
 section.
-
-One of the easiest contributions you can make is helping to translate this addon on
-`Transifex <https://www.transifex.com/projects/p/djangocms-transfer/>`_.
 
 
 Documentation
@@ -174,7 +167,7 @@ You can run tests by executing::
     :target: https://codecov.io/gh/divio/djangocms-translations
 
 .. |python| image:: https://img.shields.io/badge/python-2.7%20%7C%203.4+-blue.svg
-    :target: https://pypi.org/project/djangocms-transfer/
+    :target: https://pypi.org/project/djangocms-translations/
 .. |django| image:: https://img.shields.io/badge/django-1.11%20%7C%202.0%20%7C%202.1-blue.svg
     :target: https://www.djangoproject.com/
 .. |djangocms| image:: https://img.shields.io/badge/django%20CMS-3.5%2B-blue.svg
