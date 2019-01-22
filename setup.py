@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
-
 from djangocms_translations import __version__
+from setuptools import find_packages, setup
 
 
 REQUIREMENTS = [

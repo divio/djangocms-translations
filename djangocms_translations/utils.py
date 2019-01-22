@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 from itertools import chain
-try:
-    from urllib.parse import urljoin
-except ImportError:
-    from urlparse import urljoin
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -15,15 +11,25 @@ from django.utils.lru_cache import lru_cache
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language_info
 
-from yurl import URL
-
 from pygments import highlight
-from pygments.lexers import JsonLexer
 from pygments.formatters import HtmlFormatter
+from pygments.lexers import JsonLexer
+from yurl import URL
 
 from djangocms_transfer.utils import get_plugin_class, get_plugin_model
 
 from .conf import TRANSLATIONS_CONF
+
+
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
+
+
+
+
 
 
 USE_HTTPS = getattr(settings, 'URLS_USE_HTTPS', False)

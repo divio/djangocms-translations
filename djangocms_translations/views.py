@@ -2,14 +2,14 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.urls import reverse
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.translation import ugettext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
-from django.views.generic import CreateView, UpdateView, DetailView
-from django.utils.translation import ugettext
+from django.views.generic import CreateView, DetailView, UpdateView
 
 from cms.utils.conf import get_cms_setting
 

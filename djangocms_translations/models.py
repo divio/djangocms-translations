@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import json
 import logging
 
@@ -8,9 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
-from django.db import IntegrityError
-from django.db import transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -20,11 +19,12 @@ from cms.models.fields import PageField, PlaceholderField
 from cms.utils.plugins import copy_plugins_to_placeholder
 
 from extended_choices import Choices
+
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
 
-from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
+from .providers import TRANSLATION_PROVIDERS, SupertextTranslationProvider
 from .utils import get_plugin_form
 
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function, division
+from __future__ import division, print_function, unicode_literals
+
 import os
 import sys
 
 import dj_database_url
-
 from tests.celery import app  # noqa
 
 

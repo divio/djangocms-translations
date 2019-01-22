@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.utils.safestring import mark_safe
 
-from cms.plugin_rendering import _unpack_plugins, StructureRenderer
+from cms.plugin_rendering import StructureRenderer, _unpack_plugins
 from cms.utils.plugins import build_plugin_tree
 
 from djangocms_transfer.helpers import get_bound_plugins

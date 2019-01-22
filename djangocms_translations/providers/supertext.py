@@ -7,14 +7,15 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 import requests
-
 from extended_choices import Choices
+
 from djangocms_transfer.forms import _object_version_data_hook
 from djangocms_transfer.utils import get_plugin_class
 
 from .. import __version__ as djangocms_translations_version
-from ..utils import add_domain, get_translatable_fields, get_text_field_child_label
-
+from ..utils import (
+    add_domain, get_text_field_child_label, get_translatable_fields,
+)
 from .base import BaseTranslationProvider, ProviderException
 
 

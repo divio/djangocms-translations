@@ -4,15 +4,16 @@ import json
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
-from django.urls import reverse
 from django.db.models import Count, ManyToOneRel, Prefetch
-from django.http import HttpResponseNotFound, Http404
+from django.http import Http404, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
 from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
@@ -20,17 +21,13 @@ from cms.plugin_pool import plugin_pool
 
 from . import models, views
 from .forms import (
-    TranslateInBulkStep1Form,
-    TranslateInBulkStep2Form,
+    TranslateInBulkStep1Form, TranslateInBulkStep2Form,
     TranslateInBulkStep3Form,
 )
 from .models import TranslationRequest
 from .tasks import prepare_translation_bulk_request
 from .utils import (
-    get_language_name,
-    get_page_url,
-    get_plugin_form,
-    pretty_json,
+    get_language_name, get_page_url, get_plugin_form, pretty_json,
 )
 
 
