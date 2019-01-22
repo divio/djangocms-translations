@@ -2,6 +2,15 @@
 Changelog
 =========
 
+
+1.4.1 (unreleased)
+==================
+
+* Extended test matrix
+* Added isort and adapted imports
+* Adapted code base to align with other supported addons
+
+
 1.4.0 (2018-12-27)
 ==================
 
@@ -51,20 +60,20 @@ Changelog
 
 
 1.3.1 (2018-06-20)
------------------
+==================
 
 * Changed quotes endpoint to v1.1 for supertext. All others continue as v1
 
 
 1.3.0 (2018-06-20)
------------------
+==================
 
 * Changed all supertext endpoints to use version 1.1
 * Fixed a bug preventing a translation request from being retried
 
 
 1.2.3 (2018-06-19)
------------------
+==================
 
 * Fixed a bug where the page tree would render incomplete
 

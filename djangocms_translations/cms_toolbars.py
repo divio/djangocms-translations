@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.urls import reverse
 from django.utils.translation import get_language_from_request, ugettext_lazy as _

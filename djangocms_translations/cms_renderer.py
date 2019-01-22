@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.utils.safestring import mark_safe
 
 from cms.plugin_rendering import _unpack_plugins, StructureRenderer

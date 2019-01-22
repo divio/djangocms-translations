@@ -24,18 +24,8 @@ class DisableMigrations(dict):
 
 
 HELPER_SETTINGS = {
-    'DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER'),
-    'DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD'),
-    'DJANGOCMS_TRANSLATIONS_USE_STAGING': True,
-    # 'DATABASES': {'default': dj_database_url.config(
-    #     env='DJANGOCMS_TRANSLATIONS_DATABASE_URL',
-    #     default='postgres://djangocmstranslations:djangocmstranslations@localhost:5432/djangocmstranslations'
-    # )},
     'INSTALLED_APPS': [
         'celery',
-    ],
-    'ALLOWED_HOSTS': [
-        'localhost'
     ],
     'CMS_LANGUAGES': {
         1: [
@@ -59,6 +49,7 @@ HELPER_SETTINGS = {
         ('pt-br', 'Brazilian Portugues'),
         ('de', 'Deutsch'),
     ],
+    'ALLOWED_HOSTS': ['localhost'],
     'SITE_ID': 1,
     'DJANGOCMS_TRANSLATIONS_CONF': {
         'Bootstrap3ButtonCMSPlugin': {'text_field_child_label': 'label'},
@@ -66,7 +57,12 @@ HELPER_SETTINGS = {
     },
     'CELERY_EAGER_PROPAGATES_EXCEPTIONS': True,
     'CELERY_ALWAYS_EAGER': True,
+    'DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER'),
+    'DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD': os.environ.get('DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD'),
+    'DJANGOCMS_TRANSLATIONS_USE_STAGING': True,
 }
+
+
 if 'test' in sys.argv:
     HELPER_SETTINGS['MIGRATION_MODULES'] = DisableMigrations()
     HELPER_SETTINGS['INSTALLED_APPS'].append('tests')

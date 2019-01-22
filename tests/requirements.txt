@@ -1,7 +1,6 @@
 # requirements from setup.py
 djangocms-transfer
 psycopg2
-
 # other requirements
 djangocms-helper
 tox
