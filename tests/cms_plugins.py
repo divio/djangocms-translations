@@ -6,8 +6,9 @@ from cms.plugin_base import CMSPluginBase
 from cms.plugin_pool import plugin_pool
 from cms.utils.plugins import downcast_plugins
 
-from djangocms_translations.utils import get_text_field_child_label
 from tests.models import DummyLink, DummySpacer, DummyText
+
+from djangocms_translations.utils import get_text_field_child_label
 
 
 @plugin_pool.register_plugin

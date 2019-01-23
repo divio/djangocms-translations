@@ -4,11 +4,11 @@ import json
 from cms.api import add_plugin, create_page
 from cms.test_utils.testcases import CMSTestCase
 
+from djangocms_transfer.exporter import export_page
+
 from djangocms_translations.providers.supertext import (
     _get_translation_export_content, _set_translation_import_content,
 )
-
-from djangocms_transfer.exporter import export_page
 
 
 class GetTranslationExportContentTestCase(CMSTestCase):

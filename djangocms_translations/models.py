@@ -18,11 +18,10 @@ from cms.models import CMSPlugin
 from cms.models.fields import PageField, PlaceholderField
 from cms.utils.plugins import copy_plugins_to_placeholder
 
-from extended_choices import Choices
-
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
+from extended_choices import Choices
 
 from .providers import TRANSLATION_PROVIDERS, SupertextTranslationProvider
 from .utils import get_plugin_form
