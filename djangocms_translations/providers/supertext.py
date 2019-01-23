@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from collections import OrderedDict, defaultdict
 
@@ -6,14 +7,14 @@ from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 import requests
-
-from extended_choices import Choices
 from djangocms_transfer.forms import _object_version_data_hook
 from djangocms_transfer.utils import get_plugin_class
+from extended_choices import Choices
 
 from .. import __version__ as djangocms_translations_version
-from ..utils import add_domain, get_translatable_fields, get_text_field_child_label
-
+from ..utils import (
+    add_domain, get_text_field_child_label, get_translatable_fields,
+)
 from .base import BaseTranslationProvider, ProviderException
 
 
@@ -68,7 +69,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
     API_STAGE_URL = 'https://dev.supertext.ch/api/'
     ORDER_TYPE_CHOICES = Choices(
         ('TRANSLATION', 6, _('Translation')),
-        ('SPECIALIST_TRANSLATION', 8, _('Specialist Translation')),
+        ('SPECIALIST_TRANSLATION', 8, _('Specialist translation')),
         ('TRANSCREATION', 9, _('Transcreation')),
     )
     DELIVERY_TIME_CHOICES = Choices(

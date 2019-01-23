@@ -4,15 +4,16 @@ import json
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
-from django.urls import reverse
 from django.db.models import Count, ManyToOneRel, Prefetch
-from django.http import HttpResponseNotFound, Http404
+from django.http import Http404, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
+
 from cms.admin.placeholderadmin import PlaceholderAdminMixin
 from cms.models import CMSPlugin
 from cms.operations import ADD_PLUGIN
@@ -20,17 +21,13 @@ from cms.plugin_pool import plugin_pool
 
 from . import models, views
 from .forms import (
-    TranslateInBulkStep1Form,
-    TranslateInBulkStep2Form,
+    TranslateInBulkStep1Form, TranslateInBulkStep2Form,
     TranslateInBulkStep3Form,
 )
 from .models import TranslationRequest
 from .tasks import prepare_translation_bulk_request
 from .utils import (
-    get_language_name,
-    get_page_url,
-    get_plugin_form,
-    pretty_json,
+    get_language_name, get_page_url, get_plugin_form, pretty_json,
 )
 
 
@@ -83,19 +80,19 @@ class TranslationRequestItemInline(AllReadOnlyFieldsMixin, admin.TabularInline):
 
     def source_cms_page_slug(self, obj):
         return obj.source_cms_page.get_slug(language=obj.translation_request.source_language)
-    source_cms_page_slug.short_description = _('Source CMS Page Slug')
+    source_cms_page_slug.short_description = _('Source CMS page slug')
 
     def target_cms_page_slug(self, obj):
         return obj.target_language.get_slug(language=obj.translation_request.target_language)
-    target_cms_page_slug.short_description = _('Target CMS Page Slug')
+    target_cms_page_slug.short_description = _('Target CMS page slug')
 
     def pretty_source_cms_page(self, obj):
         return self._pretty_page_display(obj.source_cms_page, obj.translation_request.source_language)
-    pretty_source_cms_page.short_description = _('Source CMS Page')
+    pretty_source_cms_page.short_description = _('Source CMS page')
 
     def pretty_target_cms_page(self, obj):
         return self._pretty_page_display(obj.target_cms_page, obj.translation_request.target_language)
-    pretty_target_cms_page.short_description = _('Target CMS Page')
+    pretty_target_cms_page.short_description = _('Target CMS page')
 
 
 class TranslationQuoteInline(AllReadOnlyFieldsMixin, admin.TabularInline):
@@ -132,7 +129,7 @@ class TranslationOrderInline(AllReadOnlyFieldsMixin, admin.StackedInline):
 
     def provider_order_id(self, obj):
         return obj.provider_details.get('Id') or obj.response_content.get('Id')
-    provider_order_id.short_description = _('Provider Order ID')
+    provider_order_id.short_description = _('Provider order ID')
 
     def pretty_provider_options(self, obj):
         return pretty_json(json.dumps(obj.provider_options))
@@ -192,7 +189,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
                 'provider_backend',
             ),
         }),
-        (_('Additional Info'), {
+        (_('Additional info'), {
             'fields': (
                 'pretty_provider_options',
                 'pretty_export_content',
@@ -268,7 +265,7 @@ class TranslationRequestAdmin(AllReadOnlyFieldsMixin, admin.ModelAdmin):
         if obj.state == models.TranslationRequest.STATES.PENDING_QUOTE:
             action = mark_safe(
                 '<a class="button" '
-                'onclick="window.django.jQuery.ajax({{'
+                'onclick="window.django.jQuery.ajax({{'  # noqa
                 'method: \'POST\', headers: {headers}, url: \'{url}\', success: {refresh_window_callback}'
                 '}});" href="#">{title}</a>'.format(
                     url=reverse('admin:get-quote-from-provider', args=(obj.pk,)),
@@ -569,7 +566,7 @@ class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
         try:
             plugin_id = int(plugin_id)
         except ValueError:
-            return HttpResponseNotFound(force_text(_("Plugin not found")))
+            return HttpResponseNotFound(force_text(_('Plugin not found')))
 
         obj = self._get_plugin_from_id(plugin_id)
         plugin_class = plugin_pool.get_plugin(obj.plugin_type)

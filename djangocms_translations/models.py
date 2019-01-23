@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import json
 import logging
 
@@ -7,9 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
-from django.db import IntegrityError
-from django.db import transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -18,12 +18,12 @@ from cms.models import CMSPlugin
 from cms.models.fields import PageField, PlaceholderField
 from cms.utils.plugins import copy_plugins_to_placeholder
 
-from extended_choices import Choices
 from djangocms_transfer.exporter import get_page_export_data
 from djangocms_transfer.importer import import_plugins_to_page
 from djangocms_transfer.utils import get_plugin_class
+from extended_choices import Choices
 
-from .providers import SupertextTranslationProvider, TRANSLATION_PROVIDERS
+from .providers import TRANSLATION_PROVIDERS, SupertextTranslationProvider
 from .utils import get_plugin_form
 
 
@@ -42,8 +42,8 @@ class TranslationRequest(models.Model):
         ('PENDING_APPROVAL', 'pending_approval', _('Pending approval of quote')),
         ('READY_FOR_SUBMISSION', 'ready_for_submission', _('Pending submission to translation provider')),
         ('IN_TRANSLATION', 'in_translation', _('In translation')),
-        ('IMPORT_STARTED', 'import_started', _('Import Started')),
-        ('IMPORT_FAILED', 'import_failed', _('Import Failed')),
+        ('IMPORT_STARTED', 'import_started', _('Import started')),
+        ('IMPORT_FAILED', 'import_failed', _('Import failed')),
         ('IMPORTED', 'imported', _('Imported')),
         ('CANCELLED', 'cancelled', _('Cancelled')),
     )
@@ -79,7 +79,7 @@ class TranslationRequest(models.Model):
     _provider = None
 
     def set_status(self, status, commit=True):
-        assert status in self.STATES.values, 'Invalid status'
+        assert status in self.STATES.values, _('Invalid status')
         self.state = status
 
         if commit:
@@ -91,10 +91,10 @@ class TranslationRequest(models.Model):
         request_item_count = self.items.count()
 
         if request_item_count > 1:
-            bulk_text = ' - {} pages'.format(request_item_count)
+            bulk_text = _(' - {} pages').format(request_item_count)
         else:
             bulk_text = ''
-        self.provider_order_name = 'Order #{} - {}{}'.format(self.pk, initial_page_title, bulk_text)
+        self.provider_order_name = _('Order #{} - {}{}').format(self.pk, initial_page_title, bulk_text)
         self.save(update_fields=('provider_order_name',))
 
     def set_content_from_cms(self):
@@ -151,7 +151,7 @@ class TranslationRequest(models.Model):
         return response
 
     def check_status(self):
-        assert hasattr(self, 'order'), 'Cannot check status if there is no order.'
+        assert hasattr(self, 'order'), _('Cannot check status if there is no order.')
         status = self.provider.check_status()
         self.order.state = status['Status'].lower()
         # TODO: which states are available?
@@ -167,7 +167,7 @@ class TranslationRequest(models.Model):
         try:
             import_data = self.provider.get_import_data()
         except ValueError:
-            message = "Received invalid data from {}".format(self.provider_backend)
+            message = _('Received invalid data from {}.').format(self.provider_backend)
             logger.exception(message)
             import_state.set_error_message(message)
             return self.set_status(self.STATES.IMPORT_FAILED)
@@ -184,7 +184,7 @@ class TranslationRequest(models.Model):
                 )
             except (IntegrityError, ObjectDoesNotExist):
                 self._set_import_archive()
-                message = "Failed to import plugins from {}".format(self.provider_backend)
+                message = _('Failed to import plugins from {}.').format(self.provider_backend)
                 logger.exception(message)
                 import_state.set_error_message(message)
                 import_error = True
@@ -264,7 +264,7 @@ class TranslationRequest(models.Model):
 
     def clean(self, exclude=None):
         if self.source_language == self.target_language:
-            raise ValidationError(_('Source and target languages must be different'))
+            raise ValidationError(_('Source and target languages must be different.'))
 
         return super(TranslationRequest, self).clean()
 
@@ -283,14 +283,14 @@ class TranslationRequestItem(models.Model):
         if self.translation_request.source_language not in page_languages:
             raise ValidationError({
                 'source_cms_page':
-                _('Invalid choice. Page must contain {} translation').format(self.translation_request.source_language)
+                _('Invalid choice. Page must contain {} translation.').format(self.translation_request.source_language)
             })
 
         page_languages = self.target_cms_page.get_languages()
         if self.translation_request.target_language not in page_languages:
             raise ValidationError({
                 'target_cms_page':
-                _('Invalid choice. Page must contain {} translation').format(self.translation_request.target_language)
+                _('Invalid choice. Page must contain {} translation.').format(self.translation_request.target_language)
             })
 
         return super(TranslationRequestItem, self).clean()
@@ -322,7 +322,7 @@ class TranslationOrder(models.Model):
     STATES = Choices(
         ('OPEN', 'open', _('Open')),
         ('PENDING', 'pending_quote', _('Pending')),
-        ('FAILED', 'failed', _('Failed/cancelled.')),
+        ('FAILED', 'failed', _('Failed/cancelled')),
         ('DONE', 'done', _('Done')),
     )
 
@@ -433,8 +433,8 @@ class ArchivedPlugin(models.Model):
 
 class TranslationImport(models.Model):
     STATES = Choices(
-        ('STARTED', 'started', _('Import Started')),
-        ('FAILED', 'failed', _('Import Failed')),
+        ('STARTED', 'started', _('Import started')),
+        ('FAILED', 'failed', _('Import failed')),
         ('IMPORTED', 'imported', _('Imported')),
     )
 

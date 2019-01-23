@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings
 from django.urls import reverse
-from django.utils.translation import get_language_from_request, ugettext_lazy as _
+from django.utils.translation import get_language_from_request
+from django.utils.translation import ugettext_lazy as _
+
 from cms.toolbar_base import CMSToolbar
 from cms.toolbar_pool import toolbar_pool
 

@@ -1,0 +1,360 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-01-22 16:02+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: djangocms_translations/admin.py:83
+msgid "Source CMS page slug"
+msgstr ""
+
+#: djangocms_translations/admin.py:87
+msgid "Target CMS page slug"
+msgstr ""
+
+#: djangocms_translations/admin.py:91
+msgid "Source CMS page"
+msgstr ""
+
+#: djangocms_translations/admin.py:95
+msgid "Target CMS page"
+msgstr ""
+
+#: djangocms_translations/admin.py:132
+msgid "Provider order ID"
+msgstr ""
+
+#: djangocms_translations/admin.py:136 djangocms_translations/admin.py:232
+msgid "Provider options"
+msgstr ""
+
+#: djangocms_translations/admin.py:140 djangocms_translations/admin.py:244
+msgid "Request content"
+msgstr ""
+
+#: djangocms_translations/admin.py:148
+msgid "Response content"
+msgstr ""
+
+#: djangocms_translations/admin.py:152
+msgid "Price"
+msgstr ""
+
+#: djangocms_translations/admin.py:192
+msgid "Additional info"
+msgstr ""
+
+#: djangocms_translations/admin.py:224
+msgid "Source language"
+msgstr ""
+
+#: djangocms_translations/admin.py:228
+msgid "Target language"
+msgstr ""
+
+#: djangocms_translations/admin.py:240
+msgid "Export content"
+msgstr ""
+
+#: djangocms_translations/admin.py:255 djangocms_translations/admin.py:402
+#: djangocms_translations/templates/djangocms_translations/pages_sent.html:20
+msgid "Pages sent"
+msgstr ""
+
+#: djangocms_translations/admin.py:272
+msgid "Refresh"
+msgstr ""
+
+#: djangocms_translations/admin.py:280
+msgid "Choose quote"
+msgstr ""
+
+#: djangocms_translations/admin.py:285
+msgid "Log"
+msgstr ""
+
+#: djangocms_translations/admin.py:292
+#: djangocms_translations/templates/djangocms_translations/log.html:20
+#: djangocms_translations/templates/djangocms_translations/status_detail.html:8
+msgid "Status"
+msgstr ""
+
+#: djangocms_translations/admin.py:328
+msgid "Create bulk translations"
+msgstr ""
+
+#: djangocms_translations/admin.py:350
+msgid "Create bulk translations (step 2)"
+msgstr ""
+
+#: djangocms_translations/admin.py:369
+msgid "Create bulk translations (step 3)"
+msgstr ""
+
+#: djangocms_translations/admin.py:413
+#: djangocms_translations/templates/djangocms_translations/log.html:10
+msgid "Error log"
+msgstr ""
+
+#: djangocms_translations/admin.py:569
+msgid "Plugin not found"
+msgstr ""
+
+#: djangocms_translations/apps.py:8
+msgid "django CMS Translations"
+msgstr ""
+
+#: djangocms_translations/cms_toolbars.py:24
+msgid "Translations"
+msgstr ""
+
+#: djangocms_translations/cms_toolbars.py:26
+msgid "Overview"
+msgstr ""
+
+#: djangocms_translations/cms_toolbars.py:32
+msgid "Translate in bulk"
+msgstr ""
+
+#: djangocms_translations/cms_toolbars.py:42
+msgid "Translate this page"
+msgstr ""
+
+#: djangocms_translations/cms_toolbars.py:51
+msgid "to {}"
+msgstr ""
+
+#: djangocms_translations/forms.py:53
+msgid "Select with children"
+msgstr ""
+
+#: djangocms_translations/forms.py:135
+msgid "No eligible pages found for this configuration."
+msgstr ""
+
+#: djangocms_translations/forms.py:194
+msgid "Order without quote"
+msgstr ""
+
+#: djangocms_translations/forms.py:212
+msgid "<strong>{}</strong><br>{}<br><br>Delivery until: {}<br>Price: {} {}"
+msgstr ""
+
+#: djangocms_translations/models.py:40
+msgid "Draft"
+msgstr ""
+
+#: djangocms_translations/models.py:41 djangocms_translations/models.py:324
+msgid "Open"
+msgstr ""
+
+#: djangocms_translations/models.py:42
+msgid "Pending quote from provider"
+msgstr ""
+
+#: djangocms_translations/models.py:43
+msgid "Pending approval of quote"
+msgstr ""
+
+#: djangocms_translations/models.py:44
+msgid "Pending submission to translation provider"
+msgstr ""
+
+#: djangocms_translations/models.py:45
+msgid "In translation"
+msgstr ""
+
+#: djangocms_translations/models.py:46 djangocms_translations/models.py:437
+msgid "Import started"
+msgstr ""
+
+#: djangocms_translations/models.py:47 djangocms_translations/models.py:438
+msgid "Import failed"
+msgstr ""
+
+#: djangocms_translations/models.py:48 djangocms_translations/models.py:439
+msgid "Imported"
+msgstr ""
+
+#: djangocms_translations/models.py:49
+msgid "Cancelled"
+msgstr ""
+
+#: djangocms_translations/models.py:53
+msgid "Supertext"
+msgstr ""
+
+#: djangocms_translations/models.py:83
+msgid "Invalid status"
+msgstr ""
+
+#: djangocms_translations/models.py:95
+msgid " - {} pages"
+msgstr ""
+
+#: djangocms_translations/models.py:98
+msgid "Order #{} - {}{}"
+msgstr ""
+
+#: djangocms_translations/models.py:155
+msgid "Cannot check status if there is no order."
+msgstr ""
+
+#: djangocms_translations/models.py:171
+msgid "Received invalid data from {}."
+msgstr ""
+
+#: djangocms_translations/models.py:188
+msgid "Failed to import plugins from {}."
+msgstr ""
+
+#: djangocms_translations/models.py:268
+msgid "Source and target languages must be different."
+msgstr ""
+
+#: djangocms_translations/models.py:287 djangocms_translations/models.py:294
+msgid "Invalid choice. Page must contain {} translation."
+msgstr ""
+
+#: djangocms_translations/models.py:325
+msgid "Pending"
+msgstr ""
+
+#: djangocms_translations/models.py:326
+msgid "Failed/cancelled"
+msgstr ""
+
+#: djangocms_translations/models.py:327
+msgid "Done"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:72
+msgid "Translation"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:73
+msgid "Specialist translation"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:74
+msgid "Transcreation"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:77
+msgid "Express (6h)"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:78
+msgid "24 hours"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:79
+msgid "48 hours"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:80
+msgid "3 days"
+msgstr ""
+
+#: djangocms_translations/providers/supertext.py:81
+msgid "1 week"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_1.html:6
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_2.html:59
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_3.html:13
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] ""
+msgstr[1] ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_1.html:31
+msgid "Next"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_2.html:93
+msgid "Send for quote"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_2.html:94
+msgid "Send without quote"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_2.html:95
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_3.html:47
+msgid "Back"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/bulk_create_step_3.html:46
+msgid "Send"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/change_form.html:17
+msgid "Adjust import data"
+msgstr ""
+
+#: djangocms_translations/templates/admin/djangocms_translations/translationrequest/change_form.html:19
+#: djangocms_translations/templates/djangocms_translations/import_confirmation.html:15
+#: djangocms_translations/views.py:99
+msgid "Import from archive"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/import_confirmation.html:11
+#: djangocms_translations/templates/djangocms_translations/log.html:6
+#: djangocms_translations/templates/djangocms_translations/pages_sent.html:16
+msgid "Home"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/import_confirmation.html:20
+msgid "Are you sure you want to import plugins from the translation archive?"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/import_confirmation.html:26
+msgid "No, take me back"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/import_confirmation.html:27
+msgid "Yes, I&#39;m sure"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/log.html:19
+msgid "Time"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/log.html:21
+msgid "Message"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/log.html:33
+msgid "No imports logged"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/pages_sent.html:29
+msgid "Title"
+msgstr ""
+
+#: djangocms_translations/templates/djangocms_translations/pages_sent.html:30
+msgid "Slug"
+msgstr ""
+
+#: djangocms_translations/views.py:87
+msgid "Failed to import plugins."
+msgstr ""
+
+#: djangocms_translations/views.py:90
+msgid "Plugins imported successfully."
+msgstr ""

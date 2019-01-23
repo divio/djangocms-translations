@@ -17,7 +17,7 @@ class Form(forms.BaseForm):
         ))
 
         if 'ALDRYN_SSO_LOGIN_WHITE_LIST' in settings:
-            endpoint = '/admin/djangocms_translations/translationrequest/\w+/callback/'
+            endpoint = '/admin/djangocms_translations/translationrequest/\w+/callback/'  # noqa
             settings['ALDRYN_SSO_LOGIN_WHITE_LIST'].append(endpoint)
 
         settings['DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER'] = env('DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER')
