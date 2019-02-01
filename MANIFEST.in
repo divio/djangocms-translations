@@ -1,6 +1,6 @@
 include LICENSE.txt
 include README.rst
-recursive-include djangocms_audio/locale *
-recursive-include djangocms_audio/static *
-recursive-include djangocms_audio/templates *
+recursive-include djangocms_translations/locale *
+recursive-include djangocms_translations/static *
+recursive-include djangocms_translations/templates *
 recursive-exclude * *.py[co]
