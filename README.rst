@@ -40,21 +40,76 @@ For a manual install:
 * add ``djangocms_translations`` to your ``INSTALLED_APPS``
 * run ``python manage.py migrate djangocms_translations``
 
+There need to be at least 2 languages configured for this addon to work.
+
 
 Configuration
 -------------
 
-**When content is sent for translation, the source pages must not be edited
-until the translated content has been written back successfully.**
+.. note::
 
-The translation system needs to find exactly the same plugins in the content
-as were there when the process was initiated. If any are missing, it will
-cause an error and require the process to be restarted.
+    **When content is sent for translation, the source pages must not be edited
+    until the translated content has been written back successfully.**
 
-**This affects all plugins on a page** including text, images and other plugin types.
+    The translation system needs to find exactly the same plugins in the content
+    as were there when the process was initiated. If any are missing, it will
+    cause an error and require the process to be restarted.
 
-**Any change to plugins on a source page while content is out for translation
-can cause write-back failures.**
+    **This affects all plugins on a page** including text, images and other plugin types.
+
+    **Any change to plugins on a source page while content is out for translation
+    can cause write-back failures.**
+
+
+Settings
+########
+
+With ``DJANGOCMS_TRANSLATIONS_CONF`` you can define what data should be
+sent from any given plugin to control unnecessary data isn't transferred::
+
+    DJANGOCMS_TRANSLATIONS_CONF = {
+        'TextPlugin': {'fields': ['body']},
+        'LinkPlugin': {'fields': ['name']},
+        'AudioFilePlugin': {'fields': ['text_title', 'text_description']},
+        'AudioFolderPlugin': {'fields': []},
+        'AudioTrackPlugin': {'fields': ['label']},
+        'AudioPlayerPlugin': {'fields': ['label']},
+        'FilePlugin': {'fields': ['link_title']},
+        'PicturePlugin': {'fields': ['caption_text']},
+        'VideoTrackPlugin': {'fields': ['label']},
+        'VideoSourcePlugin': {'fields': ['text_title', 'text_description']},
+        'VideoPlayerPlugin': {'fields': ['label']},
+    }
+
+With ``DJANGOCMS_TRANSLATIONS_USE_STAGING`` set to ``True`` you can send the
+data to a staging environment rather than live.
+
+With ``DJANGOCMS_TRANSLATIONS_BULK_BATCH_SIZE`` you can define the batch size
+to be transmitted to the translation provider. The default is ``100``.
+
+You may additionally need to configure ``URLS_USE_HTTPS = True`` in your project
+depending on your HTTPS setup.
+
+
+Supertext
+#########
+
+This addon ships with a `default provider <https://github.com/divio/djangocms-translations/tree/master/djangocms_translations/providers>`_
+for `Supertext <https://www.supertext.ch/>`_.
+
+Please contact *Supertext* to get your API username and token, you will need to register
+the following environment variables in your project::
+
+    DJANGOCMS_TRANSLATIONS_SUPERTEXT_USER
+    DJANGOCMS_TRANSLATIONS_SUPERTEXT_PASSWORD
+
+Additional providers can be added by inspecting the *Supertext* integration.
+We're very open for pull request to support other providers.
+
+
+User manual
+-----------
+
 
 Single page translation
 #######################
@@ -98,6 +153,7 @@ Once the translation request has been sent, the Status, as described under
 Overview will apply. If there are issues you may want to check with the
 translation provider on their status.
 
+
 Bulk translation
 ################
 
@@ -120,32 +176,6 @@ full bulk translation will fail, even if just one page is not configured correct
 
 **Provider Backend**
 Same as for single translation requests.
-
-Settings
-########
-
-With ``DJANGOCMS_TRANSLATIONS_CONF`` you can define what data should be
-sent from any given plugin to control unnecessary data isn't transferred::
-
-    DJANGOCMS_TRANSLATIONS_CONF = {
-        'TextPlugin': {'fields': ['body']},
-        'LinkPlugin': {'fields': ['name']},
-        'AudioFilePlugin': {'fields': ['text_title', 'text_description']},
-        'AudioFolderPlugin': {'fields': []},
-        'AudioTrackPlugin': {'fields': ['label']},
-        'AudioPlayerPlugin': {'fields': ['label']},
-        'FilePlugin': {'fields': ['link_title']},
-        'PicturePlugin': {'fields': ['caption_text']},
-        'VideoTrackPlugin': {'fields': ['label']},
-        'VideoSourcePlugin': {'fields': ['text_title', 'text_description']},
-        'VideoPlayerPlugin': {'fields': ['label']},
-    }
-
-With ``DJANGOCMS_TRANSLATIONS_USE_STAGING`` set to ``True`` you can send the
-data to a staging environment rather than live.
-
-With ``DJANGOCMS_TRANSLATIONS_BULK_BATCH_SIZE`` you can define the batch size
-to be transmitted to the translation provider. The default is ``100``.
 
 
 Running Tests
