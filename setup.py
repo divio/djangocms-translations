@@ -5,13 +5,14 @@ from djangocms_translations import __version__
 
 
 REQUIREMENTS = [
-    'django-cms>=3.5',
+    'django-cms>=3.11',
     'django-appconf>=1.0,<2',
     'django-extended-choices',
     'djangocms-transfer',
     'pygments',
     'yurl',
     'requests',
+    'six',
     'celery>=3.0,<4.0',  # aldryn-celery supports only 3.X
 ]
 
