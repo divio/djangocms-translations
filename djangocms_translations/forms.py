@@ -195,6 +195,9 @@ class TranslateInBulkStep3Form(forms.Form):
             delivery_time=self.cleaned_data['delivery_time'],
             additional_info=_('Order without quote'),
         )
+        # delete existing items before creating new ones
+        self.translation_request.items.all().delete()
+
         self.translation_request.set_status(models.TranslationRequest.STATES.READY_FOR_SUBMISSION)
         self.translation_request.submit_request()
 
