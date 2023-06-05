@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.conf import settings
+from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 
@@ -208,12 +210,14 @@ class ChooseTranslationQuoteForm(forms.ModelForm):
         }
 
     def get_choice_label(self, obj):
+        formatted_delivery_date = date_format(obj.delivery_date, "d. F Y")
         return format_html(_(
-            '<strong>{}</strong><br>'
+            '<strong>({}) {}</strong><br>'
             '{}<br><br>'
             'Delivery until: {}<br>'
             'Price: {} {}'
-        ), obj.name, obj.description, obj.delivery_date, obj.price_currency, obj.price_amount)
+        ), obj.delivery_date_name, obj.name, obj.description, formatted_delivery_date, obj.price_currency,
+            obj.price_amount)
 
     def fix_widget_choices(self):
         widget = self.fields['selected_quote'].widget

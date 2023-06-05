@@ -133,6 +133,7 @@ class TranslationRequest(models.Model):
                     name=name,
                     description=description,
                     delivery_date=delivery_option['DeliveryDate'],
+                    delivery_date_name=delivery_option['Name'],
                     price_currency=currency,
                     price_amount=delivery_option['Price'] or 0,
                     date_received=date_received,
@@ -309,6 +310,7 @@ class TranslationQuote(models.Model):
     name = models.CharField(max_length=1000)
     description = models.TextField(blank=True, default='')
     delivery_date = models.DateTimeField(blank=True, null=True)
+    delivery_date_name = models.CharField(max_length=10, blank=True, null=True)
 
     price_currency = models.CharField(max_length=10)
     price_amount = models.DecimalField(max_digits=10, decimal_places=2)
