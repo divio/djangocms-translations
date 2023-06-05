@@ -9,7 +9,7 @@ from django.http import Http404, HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -566,7 +566,7 @@ class ArchivedPlaceholderAdmin(PlaceholderAdminMixin, admin.ModelAdmin):
         try:
             plugin_id = int(plugin_id)
         except ValueError:
-            return HttpResponseNotFound(force_text(_('Plugin not found')))
+            return HttpResponseNotFound(force_str(_('Plugin not found')))
 
         obj = self._get_plugin_from_id(plugin_id)
         plugin_class = plugin_pool.get_plugin(obj.plugin_type)
