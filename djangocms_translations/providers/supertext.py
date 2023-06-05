@@ -85,7 +85,7 @@ class SupertextTranslationProvider(BaseTranslationProvider):
     def get_headers(self):
         return {
             'Content-type': 'application/json; charset=UTF-8',
-            'Accept': '*',
+            'Accept': 'application/json',
         }
 
     def get_auth(self):

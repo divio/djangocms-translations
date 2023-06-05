@@ -4,7 +4,7 @@ from __future__ import division, print_function, unicode_literals
 
 import os
 import sys
-
+import django
 from tests.celery import app  # noqa
 
 
@@ -70,11 +70,11 @@ if 'test' in sys.argv:
         ('test_page.html', 'Normal page'),
     )
 
-
-def run():
-    from djangocms_helper import runner
-    runner.cms('djangocms_translations')
-
-
 if __name__ == '__main__':
-    run()
+    from django.test.utils import get_runner
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
+    django.setup()
+    TestRunner = get_runner(settings=None)
+    test_runner = TestRunner()
+    failures = test_runner.run_tests(['tests'])
+    sys.exit(bool(failures))
